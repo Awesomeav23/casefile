@@ -1,7 +1,7 @@
 # Casefile: Testing Plan
 
 **Status:** Planning draft. No tests exist yet, and none have been run. This document defines what will be tested and how.
-**Related:** [ARCHITECTURE](ARCHITECTURE.md) · [CASE_DESIGN §6.6, §8](CASE_DESIGN.md) · [DEVELOPMENT_ROADMAP](DEVELOPMENT_ROADMAP.md)
+**Related:** [ARCHITECTURE](ARCHITECTURE.md) · [CASE_DESIGN §6.7, §8](CASE_DESIGN.md) · [DEVELOPMENT_ROADMAP](DEVELOPMENT_ROADMAP.md)
 
 ## 1. Strategy
 
@@ -39,7 +39,29 @@ Test-first is the default for services (`conditions`, `engine`, `scoring`, `vali
 ### 2.3 Actions (`play/actions.py`)
 - Every action type: happy path, repeat (`repeat: true`, no new facts), and an undiscovered reference (`action_unavailable`).
 - `present_evidence` without an authored reaction returns `default_reaction` and creates a fact.
-- `flag_contradiction`: correct pairing, reversed pairing (statement/evidence order irrelevant), `accept_also` pairing, incorrect pairing (recorded, no discovery), already-found contradiction.
+### 2.3a Contradiction flags (`play/flags.py`, D-03)
+- Create: correct pairing → `confirmed` + `contradiction` fact + unlocks; reversed order and `accept_also` pairings also confirm; incorrect pairing → `unconfirmed`, no fact, no discovery.
+- **No penalty:** incorrect flags change no score input; scoring and results stats contain no incorrect-flag count (asserted on the serialized payloads).
+- Revise: changing an unconfirmed flag to a correct pairing confirms it; to another incorrect pairing keeps it unconfirmed and bumps `revision`.
+- Remove: unconfirmed → deleted; confirmed → 409 `flag_locked`, and its fact and unlocks remain.
+- Duplicate pairing → 409 `flag_exists`; a second confirmed flag for the same contradiction is impossible (partial unique index).
+
+### 2.3b Hints (`play/hints.py`, D-04)
+- A track is offered only when `requires` is met and `resolved_when` isn't; ordering by `priority`.
+- Tiers reveal strictly in order; skipping to tier 3 is refused; tier 3 without `confirm` → 400 `confirmation_required`.
+- After the track resolves, revealed tiers stay readable and no new tier can be revealed.
+- No offered track → 409 `no_hint_available`.
+- Hint use doesn't change score or tier (until D-21 says otherwise), but appears in results `hints_used`.
+
+### 2.3c Guest identity & claiming (`accounts/identity.py`, `accounts/claim.py`, D-01)
+- Browsing (library, briefing) creates no guest ID; starting a playthrough creates one lazily.
+- Guest playthroughs are owner-scoped: another guest or a user gets 404.
+- Claim on **register** and on **login** moves all guest playthroughs with their events, facts, discoveries, flags, hint reveals, notes, board, theories, and accusations; `guest_id` cleared; the `claimed` payload is correct.
+- D-23 conflict: the account and the guest both have an in-progress playthrough of one case → the less recently active becomes `abandoned`, both appear in history, and `conflicts` reports it.
+- Claiming is atomic: a failure mid-claim leaves the guest data untouched.
+- Logout after a claim → the next guest start uses a new guest ID.
+- `purge_guest_data`: deletes only guest playthroughs inactive longer than the retention period; never touches account-owned data; is idempotent.
+- `DELETE /me/guest/` removes only the current guest's data.
 
 ### 2.4 Scoring (`play/scoring.py`)
 - Correct answer + full proof set → full points; correct + partial → half proof points; correct + no proof → answer points only; wrong answer + correct citations → 0 (proof only counts with a correct answer).
@@ -55,6 +77,8 @@ One failing fixture per rule:
 - statement with both or neither trigger;
 - timeline event without `requires`;
 - an unreachable proof set (F1), unreachable key evidence (F2), orphan items (F3, warning only), a late-appearing culprit (F4), a suspect with no red-herring entry (F5), a failing walkthrough (F6);
+- a hint track with ≠ 3 tiers or with `mentions` not guaranteed discovered when offered (F12); a proof-set contradiction with no covering track (F13, warning); hint text containing a correct option label or an `answer_terms` phrase (F14, warning);
+- a `case.yaml` without `copyright` (D-20);
 - an image without alt text.
 
 ### 2.6 Importer (`content/importer.py`)
@@ -63,22 +87,26 @@ One failing fixture per rule:
 - Added item → inserted; existing playthroughs discover it on their next action if its conditions are met.
 - Removed key / changed answer key with an in-progress playthrough → refused. With `--force` → version bump, playthroughs marked `stale`.
 - Import is transactional: a failure mid-import leaves no partial rows.
-- Asset filenames are content-hashed; alt text is stored.
+- Asset paths stored by the importer equal the paths produced by `collect_case_assets` (same deterministic hash function), so a build and a release step run separately still agree.
 
 ## 3. Database tests
 
 Run against real PostgreSQL (CI service container):
 - Unique constraints: `(case, key)` per content type; `(person, key)` for topics and statements; `(playthrough, item_type, item_key)` discovery; `(playthrough, kind, ref)` fact.
-- **Partial unique index**: two `in_progress` playthroughs for the same user+case fail; `in_progress` + `accused` succeed.
+- **Partial unique indexes**: two `in_progress` playthroughs for the same user+case (or the same guest+case) fail; `in_progress` + `accused` succeed; preview playthroughs are excluded.
+- Ownership check: a playthrough with both or neither of `user_id` / `guest_id` is rejected.
+- One accusation per playthrough (D-02): a second `play_accusation` row for a playthrough fails.
+- Flags: duplicate pairing rejected; two confirmed flags for one contradiction rejected; the `contradiction_key` ⇔ `confirmed` check holds.
+- Hint reveals: duplicate (playthrough, track, tier) rejected; exactly 3 tiers per imported track.
 - Check constraints: statement trigger exclusivity; timeline source exclusivity; `ends_at ≥ starts_at`; enum checks; `cite_min ≤ cite_max`.
-- Cascades: account deletion removes all player data and leaves content intact; `PROTECT` prevents deleting a case with playthroughs.
+- Cascades: account deletion removes all player data (incl. flags and hint reveals) and leaves content intact; `PROTECT` prevents deleting a case with playthroughs.
 - Migrations: `makemigrations --check` in CI (no missing migrations), plus a migrate-from-zero test.
 - Concurrency: two simultaneous actions on one playthrough (threads with separate connections) produce consistent facts and no duplicate discoveries (row lock, ARCHITECTURE §3.3).
 
 ## 4. API tests
 
 For **every endpoint**:
-- Permission matrix: anonymous / other user / owner / staff → expected status (other user → **404**).
+- Permission matrix: fresh visitor / guest (owner) / other guest / account (owner) / other account / staff → expected status. Non-owners always get **404**, and account-only endpoints return 401 for guests.
 - Request validation errors use the envelope and the documented `code`.
 - Response shape matches the OpenAPI schema (schema validation in tests).
 
@@ -87,9 +115,10 @@ Specific scenarios:
 - Starting a playthrough: new → 201; existing in-progress → 200 same ID; `restart` → old one abandoned, new one created.
 - Actions after accusation → 409.
 - Board PUT with a stale version → 409 with current state; with an undiscovered ref → 400.
-- Accusation: missing answers, invalid option, citation count out of range, undiscovered citation, missing `confirm`, second submission → each yields the right error; a valid submission freezes results and moves the playthrough to `accused`.
+- Accusation: missing answers, invalid option, citation count out of range, undiscovered citation (`invalid_reference`), missing `confirm`, second submission (`accusation_already_submitted`, D-02) → each yields the right error; a valid submission freezes results and moves the playthrough to `accused`; actions, flags, and hint reveals afterwards → 409.
+- Replay after accusation: `POST /cases/{slug}/playthroughs/` creates a new playthrough; the old result stays readable.
 - Results before accusation → 409. After → full payload including undiscovered content.
-- Rate limits on login and actions (with throttle rates lowered in test settings).
+- Rate limits on login, guest playthrough starts (per IP), actions/flags, and hint reveals (with throttle rates lowered in test settings).
 - CSRF: unsafe request without a token → 403.
 
 ## 5. Evidence-visibility and spoiler-leak tests (critical)
@@ -98,9 +127,12 @@ Specific scenarios:
    - every returned content key is in the playthrough's `Discovery` set;
    - no solution-only text appears in any response: answer-key explanations, the narrative, red-herring explanations, and the explanations of unfound contradictions (string search of the serialized JSON);
    - no undiscovered key appears anywhere, including in counts, IDs, or media URLs;
-   - the `accusation-form` never includes `required_for_solve`, correct values, or points.
+   - the `accusation-form` never includes `required_for_solve`, correct values, or points;
+   - **hint text** appears only for tiers the player has revealed, and never in `casefile` (only the `hints` summary); an offered track's `goal` appears only while the track is offered or after a tier is revealed;
+   - the explanation of a contradiction appears only after a **confirmed** flag, never for an unconfirmed one.
+   - Run the progressive test twice per case: once as a **guest** and once as an **account holder**.
 2. **Media URL test:** asset URLs for undiscovered evidence aren't derivable from keys (hashed names), and aren't present in responses.
-3. **Serializer guard test:** a static test that fails if any player-facing serializer module imports a spoiler model (`AnswerKey`, `CaseSolution`, `RedHerring`, `Contradiction`). The one allowed path is via `visibility.py`.
+3. **Serializer guard test:** a static test that fails if any player-facing serializer module imports a spoiler model (`AnswerKey`, `CaseSolution`, `RedHerring`, `Contradiction`, `HintTrack`, `Hint`). The only allowed paths are `visibility.py` and `hints.py`.
 4. **Staff-only fields:** `requires` appears only in staff preview playthroughs.
 
 ## 6. Mystery-logic validation (per real case)
@@ -117,6 +149,9 @@ Parametrised over every folder in `content/cases/` except those whose names star
 | `test_red_herrings_clearable` | Every non-culprit suspect has reachable clearing evidence |
 | `test_contradictions_discoverable` | Both sides of every contradiction (and every `accept_also`) are reachable before the contradiction itself |
 | `test_timeline_consistency` | Every statement with a `claim` and each timeline event referencing it agree on times/location; times parse; events fall within the case's world date range |
+| `test_hints_cover_solution` | Every proof-set contradiction and key evidence item is covered by a hint track (F13); all hint `mentions` are discovered whenever offered (F12) |
+| `test_hints_dont_reveal` (warning) | No tier contains a correct option label or `answer_terms` phrase (F14) |
+| `test_hint_walkthrough` | Simulated "always take the next hint" player: following only tier-3 directions plus the cheapest available actions reaches an accusable state with every `full` proof set discovered |
 | `test_option_wording` (warning) | Flags accusation options whose length differs from the median by > 60%, as a reviewer prompt for F9 |
 
 ## 7. Frontend tests
@@ -125,18 +160,21 @@ Parametrised over every folder in `content/cases/` except those whose names star
 - `playthrough` store merges `discovered` deltas without duplicates and keeps ordering; "new" flags and `seen` batching work.
 - `useAction` blocks double submission, surfaces `ApiError`s, and triggers toasts on discovery.
 - `board` store: debounced saves; a 409 triggers the conflict state; optimistic changes roll back on failure.
-- `auth` store: 401 → redirect with `next`.
+- `auth` store: distinguishes visitor / guest / account; 401 on account-only endpoints → redirect with `next`; claim result surfaces a notice once.
+- `hints` store: lazy load; reveal flow; confirm before direction tier.
 - API client: CSRF header on unsafe methods; error-envelope parsing; network error mapping.
 
 ### 7.2 Components
 - EvidenceViewer renders each `kind` correctly; examine fires once.
 - Interview room: asking renders statements; re-asking doesn't duplicate; the present-evidence picker lists only discovered evidence.
-- Flag contradiction dialog: prefill from a statement or evidence; correct and incorrect result states.
+- Flag contradiction dialog: prefill from a statement or evidence; correct and incorrect result states; incorrect offers Change pairing / Remove; My flags list shows confirmed as locked and unconfirmed as editable, with no failure counts.
+- Hint panel: suggested track first; tiers in order; direction confirm dialog; "no hint" generic copy.
+- Guest banner / save prompts: dismissible, never block navigation.
 - Timeline: claimed vs. verified styling + icons; list view equivalent content; keyboard navigation.
 - Board: add, move (pointer and keyboard), link, delete; the list view edits the same model.
-- Accusation: step validation (min/max citations), review summary, confirm dialog default focus is **not** Submit.
+- Accusation: investigation review lists only discovered loose ends; step validation (min/max citations); answer review summary; confirm dialog default focus is **not** Submit.
 - Results: renders solved/unsolved variants; reduced-motion skips animation.
-- Route guards: accused → results redirect; unauthenticated → login.
+- Route guards: accused → results redirect; guests can reach every play route; only the account settings section requires login.
 
 ### 7.3 Type checking & lint
 `vue-tsc --noEmit`, ESLint, and Prettier in CI. Generated API types must compile against the current schema.
@@ -147,11 +185,14 @@ Seeded with the fixture case and *The Missing Masterpiece* via `import_case` bef
 
 | Spec | Journey |
 |---|---|
+| `guest.spec` | Fresh visitor plays without an account → reloads and resumes → registers → progress claimed and visible on Progress; second browser context logs in and sees it (cross-device) |
+| `guest-conflict.spec` | Account has an in-progress case; guest in another context starts the same case → logs in → conflict notice, both in history |
 | `auth.spec` | Register → logout → login → password reset request |
 | `library.spec` | Filters, status ribbons, briefing CTA states |
-| `golden-path.spec` | Full Missing Masterpiece walkthrough through the UI → Airtight results |
+| `golden-path.spec` | Full Missing Masterpiece walkthrough through the UI, **as a guest** → investigation review → single accusation → Airtight results → Replay starts a fresh playthrough |
 | `wrong-accusation.spec` | Accuse a red herring → Unsolved results show solution and missed evidence |
-| `contradiction.spec` | Incorrect flag feedback, then correct flag → stamp + unlocked topic appears |
+| `contradiction.spec` | Incorrect flag → "doesn't hold up", saved as Not confirmed → revise it to the correct pairing → stamp + unlocked topic; remove another unconfirmed flag; confirmed flag can't be removed |
+| `hints.spec` | Request nudge → pointer → confirm direction → follow it → track resolves; results list hints used; score unchanged vs. a no-hint run |
 | `resume.spec` | Play partway → reload/log out/in → state, board, notes, theories intact |
 | `restart.spec` | Start over → old playthrough abandoned, history shows both |
 | `board.spec` | Pin from evidence viewer, keyboard move, link, list view, persistence |
@@ -162,20 +203,22 @@ Seeded with the fixture case and *The Missing Masterpiece* via `import_case` bef
 
 ## 9. Manual playtest protocol (per case, before publish)
 
-1. At least **two testers who didn't author the case**, playing independently without hints.
-2. Record: time to solve, outcome and tier, incorrect flags, moments of confusion, and whether they felt the solution was fair (1–5) and satisfying (1–5).
-3. **Publish gate:** at least one tester solves the case; median fairness ≥ 4; every "unfair" comment is resolved or explicitly accepted.
+1. At least **two testers who didn't author the case**, playing independently. At least one plays **without hints**. The other may use hints and also rates whether each hint used helped without giving the answer away (1–5).
+2. Record: time to solve, outcome and tier, incorrect flags (for content tuning only; never shown to players), hints used, moments of confusion, and whether they felt the solution was fair (1–5) and satisfying (1–5).
+3. **Publish gate:** at least one tester solves the case without hints; median fairness ≥ 4; median hint-quality ≥ 4 (no hint judged to "give it away"); every "unfair" comment is resolved or explicitly accepted.
 4. Accessibility spot check: one tester completes the case keyboard-only, and one with a screen reader (if possible).
 
 ## 10. CI pipeline (planned)
 
 ```
-lint+typecheck (py: ruff, mypy optional; ts: eslint, vue-tsc)
+secret scan (gitleaks) + lint+typecheck (py: ruff, mypy optional; ts: eslint, vue-tsc)
   → backend tests (PostgreSQL service) incl. content suite
   → frontend unit/component tests
   → build SPA, generate schema, check TS types
   → e2e (Playwright, Chromium on every PR; all browsers nightly / on main)
 ```
+
+**CI before trust (D-19):** CI runs only once the public GitHub repository exists (D-28). Until then, every milestone's checks are run locally (`pre-commit run --all-files`, `pytest`, `npm run test`, Playwright) and their output is recorded in the milestone notes. Automated checks aren't treated as passing until they've gone green on GitHub.
 
 Coverage targets (guidance, not gates): services ≥ 90%, overall backend ≥ 80%, frontend stores/composables ≥ 80%. **Gates:** the content suite and the spoiler-leak tests must pass. There are no exceptions to either.
 
@@ -183,5 +226,6 @@ Coverage targets (guidance, not gates): services ≥ 90%, overall backend ≥ 80
 
 - Performance: an action endpoint is p95 < 150 ms on a Hard case with a fully discovered playthrough (simple pytest-benchmark or Locust smoke test before launch).
 - Payload: the casefile is < 200 KB for a fully discovered Hard case.
-- Security: `manage.py check --deploy` clean; dependency audit (`pip-audit`, `npm audit`) in CI; session cookie flags verified in a deployment smoke test.
+- Security: `manage.py check --deploy` clean; dependency audit (`pip-audit`, `npm audit`) in CI; session cookie flags verified in a deployment smoke test; **secret scan** (`gitleaks`) over full git history before the first public push and in CI thereafter (D-19).
+- Deployment smoke test on Render (M20): health endpoint, guest start + one action, login + claim, static/asset URLs resolve, cron command dry-run.
 - Lighthouse on Landing/Library: performance ≥ 85, accessibility ≥ 95.

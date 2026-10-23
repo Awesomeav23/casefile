@@ -100,6 +100,9 @@ Reading measure: document text is capped at 70ch.
 | **ItemPicker** | Searchable picker over discovered items (used by present, cite, flag, board add) |
 | **CitationChip** | Item reference chip that links to its source |
 | **Stamp** | "CONTRADICTION", "CASE CLOSED", "UNSOLVED" animated stamp |
+| **FlagStatusChip** | `Confirmed` (stamp icon) / `Not confirmed` (neutral outline, never red) |
+| **HintPanel**, **HintTierCard** | Tiered reveal with explicit buttons; confirm step before the direction tier |
+| **GuestBanner**, **SaveProgressPrompt** | Non-blocking, dismissible account prompts (D-01) |
 | **EmptyState**, **Skeleton**, **SaveIndicator** | |
 | **TimelineLanes**, **BoardCanvas** | Complex components with list alternatives |
 
@@ -113,7 +116,9 @@ Components live in `components/ui` (primitives) and domain folders (ARCHITECTURE
 | New discovery | Toast + "new" badge + rail counter; screen-reader live announcement |
 | Statement revealed | Typewriter reveal ≤ 600ms total, skippable; instant under reduced motion |
 | Contradiction correct | "CONTRADICTION" stamp (300ms), explanation card, list of unlocks |
-| Contradiction incorrect | Gentle shake (disabled under reduced motion) + "That doesn't hold up." No red flash |
+| Contradiction incorrect | Gentle shake (disabled under reduced motion) + "That doesn't hold up." No red flash. The flag is kept as "Not confirmed" with Revise/Remove; no penalty, no counter (D-03) |
+| Hint revealed | Tier card unfolds (≤ 200ms); text announced via live region; previous tiers remain |
+| Guest progress claimed | One-time toast after login: "Your investigations from this browser are now in your account." |
 | Board save | "Saving…" → "Saved" text indicator |
 | Accusation submit | Full-screen hold (≤ 1.2s, skippable) → results reveal sequence |
 | Errors | Plain-language message + next step; never raw codes |
@@ -139,12 +144,14 @@ Content must reflow at 320px width and at 200% zoom without horizontal scrolling
 - **Drag alternatives** (WCAG 2.5.7): board cards move with arrow keys; links can be created via a menu; list view edits everything.
 - **Screen readers**: landmarks per region; timeline and board have equivalent structured lists; live region for discoveries and results; images have meaningful alt text; the stamp animations have text equivalents.
 - **Text**: user text size up to 130%, plus browser zoom to 200%. No text in images except case art, which has alt text.
-- **Cognitive**: consistent placement of actions; no time pressure in v1.0 (D-15); the accusation requires explicit confirmation; autosave everywhere.
+- **Cognitive**: consistent placement of actions; no time pressure in v1.0 (D-15); no penalties for exploratory flagging (D-03); optional hints for players who get stuck (D-04); an investigation review and an explicit confirmation before the single accusation (D-02); autosave everywhere.
 - **Clue accessibility**: every clue in an image is also available as text (CASE_DESIGN F7).
 
 ## 10. Voice and copy
 
 - Second person, present tense, calm and dry: "You found 3 items in the Security Office."
 - The game never editorialises about evidence ("Suspicious!"). It reports.
+- Hints are written as the detective's own notes ("Worth comparing…"), never as an outside voice handing over answers.
+- Account prompts sell the benefit ("Keep your progress across devices"), never fear ("You'll lose everything!").
 - Error copy is human: "We couldn't save your note. We'll keep trying."
 - In-world documents use the voice of their in-world authors. UI copy stays neutral.

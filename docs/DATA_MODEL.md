@@ -26,12 +26,15 @@ content:   Case 1─* Person ─┬─* Topic ─* Statement
                  ├─1 🔒CaseSolution
                  ├─* 🔒RedHerring
                  ├─* 🔒AnswerKey (1─1 AccusationQuestion)
+                 ├─* 🔒HintTrack 1─3 🔒Hint
                  └─* CaseImport (audit)
 
-play:      User 1─* Playthrough *─1 Case
+play:      (User | guest_id) 1─* Playthrough *─1 Case
                     ├─* PlaythroughEvent  (append-only action log)
                     ├─* Fact              (deduplicated successful actions)
                     ├─* Discovery         (what the player has found)
+                    ├─* ContradictionFlag (player flags: unconfirmed | confirmed)
+                    ├─* HintReveal        (hint tiers the player requested)
                     ├─* Note
                     ├─1 Board
                     ├─* Theory
@@ -74,6 +77,7 @@ play:      User 1─* Playthrough *─1 Case
 | cover_image, cover_alt | varchar | |
 | briefing, objective | text | Markdown |
 | accusation_intro | text | |
+| copyright | varchar(200) | not null; content copyright line (CASE_DESIGN §7.1, D-20) |
 | rating_thresholds | jsonb | nullable → global defaults |
 | status | varchar | check in (`draft`,`published`,`retired`); index |
 | format_version | smallint | |
@@ -180,7 +184,20 @@ play:      User 1─* Playthrough *─1 Case
 | explanation | text | |
 
 ### `content_casesolution` 🔒
-`case_id` (**unique**, 1:1), `summary`, `narrative`, `key_evidence` text[] (evidence keys), `walkthrough` jsonb (used by tests and staff preview), `hints` jsonb (reserved, D-04).
+`case_id` (**unique**, 1:1), `summary`, `narrative`, `key_evidence` text[] (evidence keys), `walkthrough` jsonb (used by tests and staff preview), `answer_terms` text[] (giveaway phrases for hint lint F14).
+
+### `content_hinttrack` 🔒
+| Field | Type | Constraints |
+|---|---|---|
+| case_id, key | | **unique (case_id, key)** |
+| goal | varchar(120) | player-facing label, shown once offered |
+| priority | smallint | default 100; lower is offered first |
+| requires | jsonb | when the track becomes relevant |
+| resolved_when | jsonb | when it stops being offered |
+| mentions | jsonb | citation refs named in any tier (validator F12) |
+
+### `content_hint` 🔒
+`track_id` FK → hinttrack (`CASCADE`), `tier` smallint (check 1–3), `level` varchar (check in `nudge`,`pointer`,`direction`; must match tier 1/2/3), `text`. **unique (track_id, tier)**. The importer requires exactly 3 tiers per track.
 
 ### `content_redherring` 🔒
 `case_id`, `person_id` (**unique (case_id, person_id)**), `suspicion`, `cleared_by` jsonb (refs), `explanation`.
@@ -191,8 +208,8 @@ play:      User 1─* Playthrough *─1 Case
 | Field | Type | Constraints / notes |
 |---|---|---|
 | id | uuid | PK |
-| user_id | FK → user | nullable **only** to support guest play (D-01); `CASCADE` |
-| guest_session_key | varchar(40) | nullable; unused unless D-01 approved |
+| user_id | FK → user | nullable: null for guest-owned playthroughs (D-01); `CASCADE` |
+| guest_id | uuid | nullable: the guest identity stored in the anonymous session (ARCHITECTURE §5); set to null when claimed |
 | case_id | FK → case | `PROTECT` (cases are retired, not deleted) |
 | content_version | integer | version at start |
 | status | varchar | check in (`in_progress`,`accused`,`abandoned`,`stale`) |
@@ -200,16 +217,17 @@ play:      User 1─* Playthrough *─1 Case
 | accused_at | timestamptz | nullable |
 | active_seconds | integer | accumulated from client heartbeats, capped per interval |
 | is_preview | bool | default false; staff preview playthroughs (reveal-all, `requires` exposure); excluded from progress and statistics |
-| | | **check: user_id IS NOT NULL OR guest_session_key IS NOT NULL** |
-| | | **partial unique (user_id, case_id) WHERE status = 'in_progress' AND NOT is_preview** — one active investigation per case |
-| | | index (user_id, last_active_at desc) |
+| | | **check: exactly one of (user_id, guest_id) is not null** |
+| | | **partial unique (user_id, case_id) WHERE status = 'in_progress' AND NOT is_preview**: one active investigation per case per account |
+| | | **partial unique (guest_id, case_id) WHERE status = 'in_progress'**: one per case per guest |
+| | | index (user_id, last_active_at desc); index (guest_id, last_active_at) (purge job, D-22) |
 
 ### `play_playthroughevent` (append-only log)
 | Field | Type | Notes |
 |---|---|---|
 | id | bigint | PK |
 | playthrough_id | FK | `CASCADE`; index (playthrough_id, id) |
-| type | varchar | `visit_location`, `examine_evidence`, `ask_topic`, `present_evidence`, `flag_contradiction`, `accuse`, `abandon` |
+| type | varchar | `visit_location`, `examine_evidence`, `ask_topic`, `present_evidence`, `flag_created`, `flag_revised`, `flag_removed`, `hint_revealed`, `accuse`, `abandon`, `claimed` |
 | payload | jsonb | action input, e.g. `{ "person": "...", "evidence": "..." }` |
 | outcome | jsonb | e.g. `{ "correct": false }`, discovered keys |
 | is_repeat | bool | true when it created no new fact |
@@ -232,6 +250,26 @@ Never updated or deleted, except by cascade on account deletion.
 | | | **unique (playthrough_id, item_type, item_key)** |
 
 **Why keys rather than foreign keys here:** playthrough state must survive content re-imports. Rows are upserted by key, so referring to keys keeps discoveries valid when content IDs or text change. The importer's breaking-change rule (ARCHITECTURE §8) guarantees that referenced keys aren't removed under an active playthrough. Integrity is checked in application code and by a test that cross-checks all discoveries against content.
+
+### `play_contradictionflag` (D-03)
+| Field | Type | Constraints |
+|---|---|---|
+| id | uuid | PK |
+| playthrough_id | FK | `CASCADE` |
+| statement_key | varchar(161) | the flagged statement |
+| conflicts_type | varchar | check in (`evidence`,`statement`) |
+| conflicts_key | varchar(161) | |
+| status | varchar | check in (`unconfirmed`,`confirmed`) |
+| contradiction_key | varchar(80) | null unless confirmed |
+| revision | smallint | incremented on each revise |
+| | | **unique (playthrough_id, statement_key, conflicts_type, conflicts_key)** (the same pairing can't be flagged twice) |
+| | | **partial unique (playthrough_id, contradiction_key) WHERE status = 'confirmed'** |
+| | | check: `contradiction_key IS NOT NULL` ⇔ `status = 'confirmed'` |
+
+Unconfirmed flags may be revised (pairing changed, then re-verified) or deleted. Confirmed flags are immutable and undeletable, and their `contradiction` fact is permanent (D-24 covers hiding them). Incorrect attempts aren't counted anywhere player-facing (D-03). The event log keeps them for debugging only.
+
+### `play_hintreveal` (D-04)
+`playthrough_id` FK (`CASCADE`), `track_key` varchar(80), `tier` smallint (check 1–3), `revealed_at`. **unique (playthrough_id, track_key, tier)**. Check in service: tier *n* requires tier *n−1* already revealed.
 
 ### `play_note`
 `id` uuid, `playthrough_id`, `body` text (≤ 10 000 chars), `attached_type` + `attached_key` (nullable pair; check both-or-neither), `version` int. Index (playthrough_id, updated_at).
@@ -256,13 +294,13 @@ Never updated or deleted, except by cascade on account deletion.
 ### `play_accusation`
 | Field | Type | Constraints |
 |---|---|---|
-| playthrough_id | FK | **unique** (one attempt, default pending D-02; if multiple attempts are approved, replace with `attempt_no` + unique (playthrough_id, attempt_no)) |
+| playthrough_id | FK | **unique**: exactly one final accusation per playthrough (D-02). Replay = a new playthrough |
 | answers | jsonb | `{ "<question_key>": { "answer": "...", "cite": [ref, …] } }` |
 | score, max_score | smallint | |
 | outcome | varchar | check in (`solved`,`unsolved`) |
 | tier | varchar | check in (`airtight`,`convincing`,`shaky`) or null when unsolved |
 | breakdown | jsonb | per-question result, frozen at submission |
-| stats | jsonb | frozen statistics (time, % found, flags right/wrong) |
+| stats | jsonb | frozen statistics (time, % evidence found, contradictions confirmed, hints used per tier); incorrect flags not included (D-03) |
 | content_version | integer | |
 | submitted_at | timestamptz | |
 
@@ -290,7 +328,9 @@ Used in `answers.cite`, `theory.supporting`, `answerkey.proof_*`, `redherring.cl
 
 ## 8. Deletion and retention
 
-- **Account deletion** cascades to profile, playthroughs, events, facts, discoveries, notes, board, theories, markers, and accusations.
+- **Account deletion** cascades to profile, playthroughs, events, facts, discoveries, flags, hint reveals, notes, board, theories, markers, and accusations.
+- **Guest data** (D-22): `purge_guest_data` deletes guest-owned playthroughs (and their cascades) whose `last_active_at` is older than the retention period (default 90 days). "Forget my progress on this browser" deletes the current guest's playthroughs immediately.
+- **Claiming** (D-01, D-23): on login/register, guest playthroughs get `user_id` set and `guest_id` cleared in one transaction. If an in-progress conflict hits the account's partial unique index, the less recently active playthrough is marked `abandoned` first (default pending D-23).
 - Cases are never hard-deleted once published; they move to `retired` (hidden from the library, but still viewable in a player's history).
 - Data export (PRODUCT_SPEC §5.1) serializes the user's playthrough tables to JSON.
 
@@ -299,4 +339,4 @@ Used in `answers.cite`, `theory.supporting`, `answerkey.proof_*`, `redherring.cl
 - Accusation questions are data, so a case can ask "who", "how", "why", "where is it", "who was the accomplice", or "which document is forged" without schema changes.
 - Persons distinguish suspects from witnesses with one flag. A case can have multiple culprits if its accusation uses two `person` questions.
 - Evidence `kind` is a closed list rendered by the frontend. Adding a kind is a small code change (ARCHITECTURE §8).
-- Hints (D-04) are reserved in `casesolution.hints`. Using them would add a `hint_used` event type and require no new tables.
+- Hints (D-04) are per-case content (`content_hinttrack`, `content_hint`). A case can have any number of tracks, and track relevance uses the same condition language as discovery.

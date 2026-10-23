@@ -36,12 +36,12 @@ Breakpoints (from UI_UX_GUIDELINES §8): **phone** < 768px · **tablet** 768–1
 Global: Settings /settings · 404 · error screen
 ```
 
-| Route | Screen | Auth |
+| Route | Screen | Access (Owner = the current player, guest or account; D-01) |
 |---|---|---|
 | `/` | Landing | Public |
 | `/login`, `/register`, `/reset-password` | Auth screens | Public |
 | `/cases` | Case Library | Public (status shown when logged in) |
-| `/cases/:slug` | Case Briefing | Public; starting requires auth (D-01) |
+| `/cases/:slug` | Case Briefing | Public; starting a case needs no account (a guest identity is created) |
 | `/play/:id/overview` (default) | Workspace: Overview | Owner |
 | `/play/:id/locations[/:key]` | Workspace: Locations | Owner |
 | `/play/:id/evidence[/:key]` | Workspace: Evidence | Owner |
@@ -51,8 +51,8 @@ Global: Settings /settings · 404 · error screen
 | `/play/:id/theories[/:theoryId]` | Workspace: Theories | Owner |
 | `/play/:id/accuse` | Final Accusation | Owner, in progress |
 | `/play/:id/results` | Case Results | Owner, accused |
-| `/progress` | Player Progress | Auth |
-| `/settings` | Settings & Account | Auth |
+| `/progress` | Player Progress | Player (guest or account) |
+| `/settings` | Settings & Account | Player; the Account section needs an account |
 
 Redirect rules:
 - An accused playthrough's workspace routes go to `/results`.
@@ -68,6 +68,7 @@ Redirect rules:
 | Error (network) | Inline message + "Try again"; existing content stays visible |
 | Error (404 / not owner) | Full 404 screen: "This file doesn't exist or isn't yours." + link to library |
 | Offline | Persistent top banner; actions disabled with tooltip "Reconnect to continue investigating" |
+| Guest (D-01) | Small, dismissible-per-session banner in the workspace and on Progress: "Playing as a guest. Your progress is saved in this browser. **Create an account** to keep it across devices." It never blocks play. Dismissed for the session after 1 click |
 | Saving (board, notes, theories) | Subtle "Saving… / Saved" indicator; 409 conflict shows a "Reload latest" dialog |
 
 ---
@@ -91,7 +92,8 @@ Redirect rules:
 │  Fair-play promise · footer                              │
 └──────────────────────────────────────────────────────────┘
 ```
-- Logged-in players see "Continue investigation" for their most recent in-progress playthrough instead of the hero CTA.
+- Returning players (account **or** guest) see "Continue investigation" for their most recent in-progress playthrough instead of the hero CTA.
+- The primary CTA always leads straight into play. No sign-up wall appears anywhere before a case (D-01).
 - "How it works" is four illustrated steps that match the gameplay loop (PRODUCT_SPEC §4).
 - Connects to: Library, Briefing (featured), Login/Register, Workspace (continue).
 
@@ -99,7 +101,8 @@ Redirect rules:
 
 - A centred card on a desk-texture background. Fields: email, password (with show toggle), display name (register).
 - Inline validation on blur; server errors map to fields. The submit button shows a busy state.
-- After login, redirect to `next` or the Library.
+- After login or register, redirect to `next` or the Library. If guest progress was claimed, show a notice: "We moved 2 investigations from this browser into your account." If a D-23 conflict occurred, add one line per case saying which playthrough was kept, with a link to History.
+- Register and login screens explain the benefit in one line: "Keep your progress across devices and build your case history."
 - Password reset: request form → "Check your email" confirmation (same message whether or not the account exists) → token form.
 
 ## 5. Case Library `/cases`
@@ -141,7 +144,8 @@ Redirect rules:
 └───────────────────────────────┴──────────────────────────┘
 ```
 - Primary CTA by status: **Begin investigation** (not started) / **Resume investigation** + secondary "Start over" (in progress, which confirms abandoning) / **Replay case** + "View results" (accused).
-- Logged out: CTA reads "Log in to investigate" (default pending D-01).
+- No account: the CTA is still **Begin investigation** (guest play, D-01), with a secondary text link "Log in to save across devices".
+- The briefing footer shows the case's copyright line (D-20).
 - Playthrough history (if any): a compact list of past outcomes.
 - The briefing stays reachable from the workspace (Overview → "Re-read briefing").
 
@@ -152,7 +156,7 @@ Redirect rules:
 ```
 Desktop
 ┌──────────────────────────────────────────────────────────────────────┐
-│ ◧ CASEFILE │ The Missing Masterpiece   [🔍 Search  ⌘K]  [Notebook] [≡]│
+│ ◧ CASEFILE │ The Missing Masterpiece  [🔍 ⌘K] [💡 Hint] [Notebook] [≡]│
 ├────────────┬─────────────────────────────────────────────┬───────────┤
 │ Overview   │                                             │ Notebook  │
 │ Locations 2│              Active section                 │ drawer    │
@@ -172,7 +176,8 @@ Phone: top bar (title, search, notebook) + bottom tab bar
 - **Notebook drawer**: notes list + editor. "Attach to current item" is prefilled when an item is open. On tablet it slides over; on phone it opens full screen.
 - **Discovery toast** (bottom-right, stacked): "New evidence: *Courier Confirmation*" with a "View" link. A screen-reader live region announces the same text.
 - **Item actions** (available on every evidence card, statement, and event): `Pin to board`, `Add note`, `Flag contradiction` (statements and evidence), `Present to…` (evidence).
-- **Exit / menu**: back to library, settings, abandon case (confirm dialog).
+- **Hint button** (💡): opens the Hint panel (§7.10). It shows a dot when a hint track is offered, never a count.
+- **Exit / menu**: back to library, settings, abandon case (confirm dialog), and "Save progress to an account" for guests.
 
 ### 7.2 Overview
 
@@ -245,8 +250,11 @@ Phone: top bar (title, search, notebook) + bottom tab bar
 ```
 - Opened from a statement: the statement is prefilled. Opened from evidence: the evidence is prefilled and the player picks the statement.
 - **Correct** → the dialog transforms into a "Contradiction found" card with the authored explanation and the list of what it unlocked. A distinct stamp animation plays and a toast follows.
-- **Incorrect** → inline "That doesn't hold up." No other information is given, and the dialog stays open to try again.
-- Found contradictions are listed in Overview and on each involved person's profile.
+- **Incorrect** → inline "That doesn't hold up." No other information is given, and there's **no penalty** (D-03). The flag is saved as *unconfirmed*. The dialog offers **Change pairing** (revise and re-check) or **Remove flag**, or the player can close it and keep the flag for later.
+- **My flags** (a tab within Overview's contradictions panel): every flag the player has made.
+  - *Confirmed* flags show the stamp and explanation and can't be edited or removed (their unlocks are permanent; D-24).
+  - *Unconfirmed* flags show "Not confirmed" in neutral styling (no red, no failure count), with **Revise** and **Remove** actions.
+- Confirmed contradictions are also listed on each involved person's profile.
 
 ### 7.7 Timeline `/timeline`
 
@@ -295,11 +303,34 @@ Events                 ◆21:47 sensor bypass  ◆21:51 photo
 - Theories carry no correctness indicator (PRODUCT_SPEC §3.4).
 - Empty: "Write down what you think happened. You can keep several theories and drop the ones that don't fit."
 
+### 7.10 Hint panel (D-04)
+
+```
+┌ Hints ─────────────────────────────────────── ✕ ┐
+│ Test the curator's account of the evening.      │
+│  ① Nudge   Corinne was confident about where…   │
+│  ② Pointer [ Show pointer ]                     │
+│  ③ Direction (locked until pointer is shown)    │
+│ Other open lines of inquiry ▾                    │
+│  • Who touched the alarm system?                 │
+└─────────────────────────────────────────────────┘
+```
+- Opens as a side sheet (bottom sheet on phone). It shows the **suggested** track first, and other offered tracks are collapsed below it.
+- Each tier needs an explicit click. The **direction** tier asks: "This will tell you exactly what to compare. Show it?" [Not yet] [Show].
+- Revealed tiers stay visible. Resolved tracks move to a "Solved with help" list.
+- No hint available: "You've got everything you need for now. Try reviewing your statements against the timeline." Generic copy that is never case-specific.
+- Hints used are shown on results (§9). Whether they affect rating depends on D-21 (default: no).
+
 ## 8. Final Accusation `/play/:id/accuse`
 
 **Purpose:** a deliberate, weighty, reviewable submission.
 
-**Flow:** Intro → one step per question → Review → Confirm → Results.
+**Flow:** Investigation review → Intro → one step per question → Answer review → Confirm → Results. There is **one accusation per playthrough** (D-02).
+
+**Investigation review** (first step; D-02):
+- Summary of the player's own work: confirmed contradictions, active theory (with "Start from this theory"), pinned board items, and suspicion markers.
+- **Loose ends**: discovered but unexamined evidence, unasked topics, unvisited locations, and unconfirmed flags. Each one links back into the workspace. This list contains only already-discovered things, so it doesn't count as a hint.
+- Actions: [Keep investigating] (returns to the workspace) · [I'm ready to accuse].
 
 ```
 ┌ Step 3 of 5 ───────────────────────────────────────────────┐
@@ -313,7 +344,7 @@ Events                 ◆21:47 sensor bypass  ◆21:51 photo
 │                                  [Back]  [Next]            │
 └────────────────────────────────────────────────────────────┘
 ```
-- **Intro**: "This is final" (D-02 copy), a reminder that the player can go back to investigating, and optional "Start from theory".
+- **Intro**: "You get one accusation for this investigation. Afterwards the full solution is revealed, and you can replay the case any time." Plus optional "Start from theory".
 - **Person** questions show portraits of discovered suspects. **Choice** questions use radio cards. **Evidence** questions show only the citation picker.
 - **Citation picker**: searchable discovered evidence, statements, and found contradictions, with previews. It enforces min/max.
 - **Review**: all answers and citations on one page, each with "Edit".
@@ -339,13 +370,16 @@ Events                 ◆21:47 sensor bypass  ◆21:51 photo
 │ RED HERRINGS  (each suspect: why suspicious, what cleared) │
 │ CONTRADICTIONS  found 2 of 3 (now totals are allowed)      │
 │ EVIDENCE YOU MISSED  [cotton gloves]                       │
-│ YOUR INVESTIGATION  54 min · 19/24 evidence · 1 wrong flag │
+│ YOUR INVESTIGATION  54 min · 19/24 evidence · 2 hints used │
 ├────────────────────────────────────────────────────────────┤
 │ [Replay case] [Back to library] [View progress]            │
 └────────────────────────────────────────────────────────────┘
 ```
 - The reveal is sequenced: stamp → outcome → score → breakdown (staggered; instant under reduced motion).
 - **Unsolved** shows "CASE UNSOLVED" in the same structure: the correct answers, the full narrative, and encouragement to replay.
+- **Replay case** starts a fresh playthrough. This result stays in history.
+- **Guests** see a save prompt below the outcome: "Create an account to keep this result in your case history." This is the strongest prompt in the product, and it's still dismissible.
+- Incorrect flags are never shown (D-03). "Hints used" lists each track's goal and the tiers revealed.
 - The results page is a permanent page that can be revisited from Progress and the Briefing.
 - Spoiler-free share card (optional, D-09).
 
@@ -356,12 +390,14 @@ Events                 ◆21:47 sensor bypass  ◆21:51 photo
 - **Case history**: table/list of every case with best tier and the playthrough list (outcome, date, link to results).
 - Optional (post-1.0): detective rank and achievements panel.
 - Empty: "No cases yet. Pick your first from the library."
+- **Guests** see this browser's progress with the guest banner, plus a note that guest progress is removed after the D-22 retention period of inactivity.
 
 ## 11. Settings & Account `/settings`
 
 - Profile: display name.
 - Preferences: text size (100/115/130%), reduced motion (system default or forced), theme (if D-08), contextual tips on/off.
-- Account: change password, export my data, delete account (password + typed confirmation).
+- Account (account holders): change password, export my data, delete account (password + typed confirmation).
+- Guests: preferences (stored in this browser), "Create account / Log in to keep your progress", and "Forget my progress on this browser" (confirm dialog).
 
 ## 12. Staff-only additions
 

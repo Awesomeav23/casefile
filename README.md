@@ -28,12 +28,14 @@ Essential (v1.0) and optional features are listed in full in [`docs/PRODUCT_SPEC
 | Briefing | Case introduction, objective, and starting persons of interest |
 | Investigation workspace | Locations, evidence examination, interviews, and a case notebook |
 | Interviews | Topic-based questioning, presenting evidence to suspects, recorded statements |
-| Contradictions | Pair a statement with conflicting evidence to break an alibi and unlock new leads |
+| Guest play | Play any case with no account; optionally create one to keep progress across devices (guest progress is carried over) |
+| Contradictions | Pair a statement with conflicting evidence to break an alibi and unlock new leads. No penalty for wrong flags; revise or remove them |
 | Timeline | Reconstructed events by person and location, claimed vs. verified |
 | Evidence board | Pin, arrange, and connect items; attach notes |
 | Theories | Draft and compare competing theories |
-| Accusation | Structured, evidence-backed final accusation |
-| Results | Scored outcome, full solution, and the evidence you missed |
+| Hints | Optional, three-tier hints that point you where to look, never at the answer |
+| Accusation | Review your investigation, then make one structured, evidence-backed final accusation |
+| Results | Scored outcome, full solution, and the evidence you missed. Replay any time |
 | Player progress | Solved cases, ratings, in-progress investigations, statistics |
 | Case pipeline | YAML authoring format, validator, solvability checker, importer |
 
@@ -46,7 +48,8 @@ Essential (v1.0) and optional features are listed in full in [`docs/PRODUCT_SPEC
 | Database | PostgreSQL |
 | API schema | OpenAPI generated with drf-spectacular; TypeScript types generated from it |
 | Testing | pytest + pytest-django (backend), Vitest + Vue Test Utils (frontend), Playwright (end-to-end) |
-| CI | GitHub Actions (planned) |
+| CI | GitHub Actions (lint workflow configured; runs once the public repo is pushed) |
+| Hosting (planned) | Render: Web Service (Django + built Vue SPA) and Render PostgreSQL. Pricing and requirements to be verified before deployment |
 
 Rationale is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -136,7 +139,7 @@ npx playwright test                # from repo root, with both servers running
 
 | Document | Contents |
 |---|---|
-| [PRODUCT_SPEC.md](docs/PRODUCT_SPEC.md) | Audience, gameplay loop, feature set, principles, **open decisions** |
+| [PRODUCT_SPEC.md](docs/PRODUCT_SPEC.md) | Audience, gameplay loop, feature set, principles, **decisions (decided and open)** |
 | [SCREEN_DESIGN.md](docs/SCREEN_DESIGN.md) | Navigation map and screen-by-screen specifications |
 | [CASE_DESIGN.md](docs/CASE_DESIGN.md) | Case authoring format, fairness standards, example case |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, services, data flow, key decisions |
@@ -154,3 +157,15 @@ npx playwright test                # from repo root, with both servers running
 4. Run `python manage.py import_case <path>`, then playtest. Publish with `--publish` when ready.
 
 The process needs no new application code unless a case requires a new *mechanic* (see "Extending mechanics" in `docs/ARCHITECTURE.md`).
+
+## License and content copyright
+
+> **Planned in milestone M0.1.** The license files are not in the repository yet.
+
+- **Application code** (backend, frontend, tests, tooling): **MIT License**, in `LICENSE`.
+- **Case content** (original mystery narratives, characters, dialogue, evidence text, hints, solutions, and original artwork under `content/cases/`): **© the author, all rights reserved**, as set out in `content/COPYRIGHT.md`. It may be read here but not reused or republished without permission, unless specific content is later explicitly licensed for reuse.
+- Third-party images and assets keep their own licenses, listed in each case's `assets/CREDITS.md`.
+
+## ⚠️ Spoiler warning
+
+This repository is public. Case solutions live in `content/cases/*/spoilers/` and in parts of `docs/CASE_DESIGN.md`. If you want to play a case fairly, don't open those files first.
