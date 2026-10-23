@@ -1,0 +1,2 @@
+# Repo-level developer tooling (backend runtime dependencies arrive in backend/ in M1).
+pre-commit>=4.0,<5

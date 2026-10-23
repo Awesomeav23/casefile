@@ -1,0 +1,21 @@
+# Local development database only. The app itself runs outside Docker during development.
+services:
+  db:
+    image: postgres:16
+    container_name: casefile-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-casefile}
+      POSTGRES_USER: ${POSTGRES_USER:-casefile}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-casefile_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5436}:5432"
+    volumes:
+      - casefile-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-casefile} -d ${POSTGRES_DB:-casefile}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  casefile-pgdata:
