@@ -1,0 +1,108 @@
+- key: empty-frame
+  title: The empty frame
+  kind: object
+  location: east-room
+  summary: The frame where the Marchand hung.
+  body: The frame is still on the wall. The canvas has been cut neatly along the stretcher, without a tear.
+- key: event-programme
+  title: Preview evening programme
+  kind: document
+  location: main-hall
+  people: [corinne-blake]
+  summary: The printed programme for the evening.
+  body: |
+    19:00 Doors open. 20:30 Welcome from Vivian Ashcombe.
+    21:30–22:00 "Marchand's Maps": a talk by Senior Curator Corinne Blake.
+- key: guest-photo
+  title: A guest's phone photo
+  kind: photo
+  location: main-hall
+  summary: A photo of the Main Hall taken on a guest's phone.
+  body: The photo shows the lectern and the projector screen, which reads "Intermission". Nobody is at the lectern. Metadata time-stamp 21:51.
+  requires: { asked: sam-pike/guests-phones }
+- key: alarm-log
+  title: Alarm system event log
+  kind: record
+  location: security-office
+  people: [daniel-reyes]
+  summary: A printout of the day's alarm events.
+  body: |
+    15:10  MAINT OVERRIDE ENABLED       user: CBLAKE
+    15:12  SYSTEM TEST STARTED
+    15:40  SYSTEM TEST COMPLETE
+    21:47  ZONE 4 (EAST RM) SENSOR      BYPASS ACTIVE
+    21:48  CCTV RECORDER RESTART
+    22:03  ZONE 4 (EAST RM) SENSOR      BYPASS CLEARED
+    22:04  CCTV RECORDER ONLINE
+- key: camera-gap
+  title: CCTV recording index
+  kind: record
+  location: security-office
+  people: [daniel-reyes]
+  summary: The list of recorded CCTV segments for the evening.
+  body: "Continuous recording 18:00–21:48. No footage 21:48–22:04. Continuous recording 22:04 onwards."
+- key: insurance-rider
+  title: Insurance policy amendment
+  kind: document
+  location: security-office
+  people: [vivian-ashcombe]
+  summary: An amendment to the gallery's insurance policy.
+  body: "Cover for 'The Cartographer's Daughter' increased from £1.6m to £2.4m. Effective 27 February. Signed: V. Ashcombe."
+- key: alarm-test-email
+  title: Email thread about the alarm system
+  kind: correspondence
+  location: curators-office
+  people: [corinne-blake, daniel-reyes]
+  summary: Emails between the curator and the head of security.
+  body: |
+    From: Corinne Blake. To: Daniel Reyes. 12 March.
+    "Daniel, could we run a full alarm test tomorrow afternoon? I'd like it calibrated for the preview."
+    From: Daniel Reyes. "Fine. You'll need your maintenance code for the zone checks."
+- key: courier-booking
+  title: Courier confirmation
+  kind: correspondence
+  location: curators-office
+  people: [felix-okafor]
+  summary: A courier booking confirmation email.
+  body: "Booking confirmed: one crate, 'Okafor Studio – return'. Collect from the loading bay, Saturday 14 March, 14:00. Booked 13 March 16:02 from workstation CURATOR-01."
+- key: cotton-gloves
+  title: White cotton gloves
+  kind: object
+  location: curators-office
+  people: [corinne-blake]
+  summary: A pair of handling gloves in the waste-paper basket.
+  body: White cotton handling gloves. Tiny flakes of gold leaf cling to the fingertips.
+  requires: { contradiction: override-user }
+- key: dismissal-draft
+  title: A letter from the owner's desk tray
+  kind: document
+  people: [vivian-ashcombe, corinne-blake]
+  summary: A draft letter found in Vivian Ashcombe's desk tray.
+  body: "Draft, dated 1 March. 'Dear Corinne, it is with regret that I must end your employment at the end of the month. The Marchand will be offered at the spring sales.' Unsigned."
+  requires: { contradiction: lectern-photo }
+- key: lender-letter
+  title: Letter from the gallery's bank
+  kind: correspondence
+  people: [vivian-ashcombe]
+  summary: A letter Vivian Ashcombe handed over.
+  body: "The bank's loan renewal is conditional on increasing insurance cover for the collection's principal assets to current valuations, by 28 February."
+  requires: { presented: vivian-ashcombe/insurance-rider }
+- key: valet-log
+  title: The valet's courtyard log
+  kind: record
+  location: courtyard
+  people: [felix-okafor, harriet-lowe, daniel-reyes]
+  summary: Sam Pike's handwritten log of who was in the courtyard.
+  body: |
+    21:40  F. Okafor, H. Lowe: out for air (stayed until 22:05)
+    21:44  D. Reyes: smoke break
+    21:56  D. Reyes: back inside
+    22:05  F. Okafor, H. Lowe: back inside
+- key: return-crate
+  title: A shipping crate awaiting collection
+  kind: object
+  location: loading-bay
+  people: [felix-okafor]
+  summary: A wooden crate labelled "Okafor Studio – return".
+  body: The crate isn't nailed shut. Inside, wrapped in acid-free tissue, is a rolled canvas, and Marchand's signature is visible at one edge.
+  requires: { examined: courier-booking }

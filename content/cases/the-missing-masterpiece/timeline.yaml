@@ -1,0 +1,97 @@
+- key: override-enabled
+  title: Maintenance override enabled
+  from: "15:10"
+  location: security-office
+  certainty: verified
+  source: { evidence: alarm-log }
+  requires: { examined: alarm-log }
+- key: talk-scheduled
+  title: Curator's talk (as scheduled)
+  from: "21:30"
+  to: "22:00"
+  location: main-hall
+  people: [corinne-blake]
+  certainty: claimed
+  source: { evidence: event-programme }
+  requires: { examined: event-programme }
+- key: corinne-claim
+  title: Corinne at the lectern (her account)
+  from: "21:30"
+  to: "22:00"
+  location: main-hall
+  people: [corinne-blake]
+  certainty: claimed
+  source: { statement: corinne-blake/at-lectern }
+  requires: { asked: corinne-blake/her-talk }
+- key: courtyard-guests
+  title: Felix Okafor and Harriet Lowe in the courtyard
+  from: "21:40"
+  to: "22:05"
+  location: courtyard
+  people: [felix-okafor, harriet-lowe]
+  certainty: verified
+  source: { evidence: valet-log }
+  requires: { examined: valet-log }
+- key: felix-claim
+  title: Felix in the courtyard (his account)
+  from: "21:40"
+  to: "22:05"
+  location: courtyard
+  people: [felix-okafor]
+  certainty: claimed
+  source: { statement: felix-okafor/felix-courtyard }
+  requires: { asked: felix-okafor/the-evening }
+- key: daniel-claim
+  title: Daniel at the monitors (his account)
+  from: "21:00"
+  to: "22:15"
+  location: security-office
+  people: [daniel-reyes]
+  certainty: claimed
+  source: { statement: daniel-reyes/watched-monitors }
+  requires: { asked: daniel-reyes/the-cameras }
+- key: daniel-smoke
+  title: Daniel Reyes in the courtyard
+  from: "21:44"
+  to: "21:56"
+  location: courtyard
+  people: [daniel-reyes]
+  certainty: verified
+  source: { evidence: valet-log }
+  requires: { examined: valet-log }
+- key: sensor-bypass
+  title: East Room sensor bypassed
+  from: "21:47"
+  to: "22:03"
+  location: east-room
+  certainty: verified
+  source: { evidence: alarm-log }
+  requires: { examined: alarm-log }
+- key: cctv-offline
+  title: CCTV not recording
+  from: "21:48"
+  to: "22:04"
+  certainty: verified
+  source: { evidence: camera-gap }
+  requires: { examined: camera-gap }
+- key: lectern-empty
+  title: Lectern empty during "Intermission"
+  from: "21:51"
+  location: main-hall
+  certainty: verified
+  source: { evidence: guest-photo }
+  requires: { examined: guest-photo }
+- key: theft-discovered
+  title: Painting found missing
+  from: "22:15"
+  location: east-room
+  certainty: verified
+  source: { evidence: empty-frame }
+  requires: { examined: empty-frame }
+- key: courier-pickup
+  title: Courier collection booked
+  from: "2026-03-14T14:00"
+  location: loading-bay
+  certainty: verified
+  source: { evidence: courier-booking }
+  requires: { examined: courier-booking }

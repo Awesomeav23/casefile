@@ -1,0 +1,41 @@
+- key: vivian-ashcombe
+  name: Vivian Ashcombe
+  role: Gallery owner
+  is_suspect: true
+  summary: Owns the Ashcombe Gallery and its collection.
+  bio: Took over the gallery from her father twelve years ago. The last two seasons have been lean.
+  default_reaction: "I don't see how that helps us find my painting."
+- key: daniel-reyes
+  name: Daniel Reyes
+  role: Head of security
+  is_suspect: true
+  summary: Runs the alarm system and the CCTV.
+  bio: Former police officer. Has worked at the gallery for six years.
+  default_reaction: "Not my department, I'm afraid."
+- key: corinne-blake
+  name: Corinne Blake
+  role: Senior curator
+  is_suspect: true
+  summary: Curated the preview exhibition and gave the evening's talk.
+  bio: Has championed Marchand's work for twenty years and wrote the catalogue essay.
+  default_reaction: "I'm not sure what you want me to say about that."
+- key: felix-okafor
+  name: Felix Okafor
+  role: Freelance restorer, guest
+  is_suspect: true
+  summary: Restored the Marchand last month.
+  bio: Runs a small studio across the river and works for several London galleries.
+  default_reaction: "Can't help you there."
+- key: harriet-lowe
+  name: Harriet Lowe
+  role: Private collector, guest
+  is_suspect: true
+  summary: Bid for the Marchand at auction years ago, and lost.
+  bio: A collector with a famous temper and a famous Marchand collection, minus one painting.
+  default_reaction: "Is this really the best use of your morning?"
+- key: sam-pike
+  name: Sam Pike
+  role: Valet attendant
+  is_suspect: false
+  summary: Parked cars and kept the courtyard log.
+  default_reaction: "Sorry, I only saw the courtyard."

@@ -1,0 +1,29 @@
+- key: check-adas-morning
+  goal: Check Ada's account of her morning.
+  priority: 10
+  requires:
+    all:
+      - asked: ada/the-morning
+      - visited: kitchen
+  resolved_when: { contradiction: market-ticket }
+  mentions: ["statement:ada/at-market", bus-ticket]
+  tiers:
+    - level: nudge
+      text: Ada sounded very sure about where she spent the morning.
+    - level: pointer
+      text: Something in her kitchen records a journey that morning.
+    - level: direction
+      text: Compare Ada's statement about the market with the time on the bus ticket.
+- key: why-would-she
+  goal: Find a reason someone would want the bicycle.
+  priority: 20
+  requires: { contradiction: market-ticket }
+  resolved_when: { examined: repair-quote }
+  mentions: []
+  tiers:
+    - level: nudge
+      text: People rarely borrow things for no reason.
+    - level: pointer
+      text: Someone else on this street knows about bicycles.
+    - level: direction
+      text: Ask Ben about Ada's own bicycle, then look around her kitchen again.

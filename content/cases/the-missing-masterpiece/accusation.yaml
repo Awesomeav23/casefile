@@ -1,0 +1,37 @@
+intro: You get one accusation for this investigation. Afterwards the full solution is revealed.
+questions:
+  - key: culprit
+    prompt: Who took the painting?
+    kind: person
+    required_for_solve: true
+  - key: opportunity
+    prompt: When did the culprit have the chance?
+    kind: choice
+    options:
+      - { key: during-intermission, label: During the intermission at a quarter to ten. }
+      - { key: before-guests-arrived, label: "In the afternoon, before the guests arrived." }
+      - { key: after-alarm-discovered, label: In the confusion after the theft was discovered. }
+      - { key: overnight, label: "Overnight, after the gallery had closed." }
+    cite: { min: 1, max: 2, prompt: Cite what proves the opportunity. }
+  - key: method
+    prompt: How was the painting removed without triggering the alarm?
+    kind: choice
+    options:
+      - { key: guard-disabled, label: The head of security switched the alarm off. }
+      - { key: override-bypass, label: A maintenance override bypassed the East Room sensor. }
+      - { key: forged-earlier, label: The painting was swapped for a copy before the preview. }
+      - { key: window-entry, label: An outsider came in through the courtyard window. }
+    cite: { min: 1, max: 2, prompt: Cite what proves the method. }
+  - key: motive
+    prompt: Why?
+    kind: choice
+    options:
+      - { key: insurance-payout, label: To collect the insurance payout. }
+      - { key: dismissal-and-buyer, label: She was about to lose her job and had a private buyer. }
+      - { key: gambling-debts, label: To pay off gambling debts. }
+      - { key: collector-obsession, label: A collector's obsession with completing a set. }
+    cite: { min: 1, max: 2, prompt: Cite what proves the motive. }
+  - key: location-now
+    prompt: Where is the painting now? Cite the item that proves it.
+    kind: evidence
+    cite: { min: 1, max: 1 }

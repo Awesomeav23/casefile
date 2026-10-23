@@ -68,6 +68,8 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: OpenAPI schema is valid
         run: python manage.py spectacular --validate --fail-on-warn --file /dev/null
+      - name: Validate every case (and the fixture)
+        run: python manage.py validate_case --all ../content/cases/_fixtures/mini-case
       - name: Tests
         run: pytest
 

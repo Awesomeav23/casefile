@@ -1,0 +1,32 @@
+answers:
+  culprit:
+    correct: ada
+    points: 60
+    explanation: Ada came home at 09:40, used her spare key, and took the bicycle.
+  motive:
+    correct: needed-a-bike
+    points: 20
+    proof:
+      points: 20
+      full: [[repair-quote]]
+      partial: [["statement:ben/bike-broke"]]
+    explanation: Her own bicycle was in for a three-week repair.
+summary: Ada borrowed Ben's bicycle without asking while hers was being repaired.
+narrative: |
+  Ada told everyone she was at the market all morning, but she caught the 09:40 bus home,
+  let herself into the shed with her spare key, and rode off on Ben's bicycle.
+red_herrings:
+  - person: ben
+    suspicion: He reported the theft and could have staged it.
+    cleared_by: [gym-pass]
+    explanation: The gym logged Ben in from 08:55 to 10:20.
+key_evidence: [bus-ticket, repair-quote]
+answer_terms: ["took the bicycle"]
+walkthrough:
+  - visit: kitchen
+  - ask: ada/the-morning
+  - flag: { statement: ada/at-market, evidence: bus-ticket }
+  - ask: ben/the-bike
+  - accuse:
+      culprit: { answer: ada }
+      motive: { answer: needed-a-bike, cite: [repair-quote] }

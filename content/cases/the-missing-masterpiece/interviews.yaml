@@ -1,0 +1,119 @@
+corinne-blake:
+  topics:
+    - key: her-talk
+      prompt: Ask about her talk in the Main Hall.
+      statements:
+        - key: at-lectern
+          text: "I was at the lectern from half past nine until ten. Ask anyone."
+          claim: { from: "21:30", to: "22:00", location: main-hall }
+    - key: the-alarm-system
+      prompt: Ask about the alarm system.
+      statements:
+        - key: never-touch-system
+          text: "I never touch the security system. That's Daniel's world."
+    - key: the-intermission
+      prompt: Confront her with the photo of the empty lectern.
+      requires: { contradiction: lectern-photo }
+      statements:
+        - key: stepped-out
+          text: "Fine. I paused at a quarter to ten and stepped out for some air. It was stuffy."
+    - key: the-buyer
+      prompt: Ask why she used a maintenance override.
+      requires: { contradiction: override-user }
+      statements:
+        - key: buyer-admission
+          text: "A private buyer approached me months ago about the Marchand. I told him no. That has nothing to do with the alarm test."
+  reactions:
+    - evidence: guest-photo
+      statements:
+        - key: photo-reaction
+          text: "Phones take odd pictures. I may have stepped aside for a moment."
+    - evidence: dismissal-draft
+      statements:
+        - key: letter-reaction
+          text: "Vivian never showed me that. I had no idea."
+daniel-reyes:
+  topics:
+    - key: the-cameras
+      prompt: Ask what he saw on the cameras.
+      statements:
+        - key: watched-monitors
+          text: "I never left the monitors all evening. Nothing moved in the East Room."
+          claim: { from: "21:00", to: "22:15", location: security-office }
+    - key: the-system
+      prompt: Ask who can change the alarm settings.
+      statements:
+        - key: who-has-codes
+          text: "Only Vivian, Corinne and I have override codes. Corinne asked for a full test yesterday afternoon."
+    - key: the-smoke-break
+      prompt: Confront him with the valet's log.
+      requires: { contradiction: monitor-room }
+      statements:
+        - key: smoke-admission
+          text: "All right, I went out for a cigarette. Twelve minutes, no more. I didn't want to lose my job over it."
+  reactions:
+    - evidence: camera-gap
+      statements:
+        - key: camera-reaction
+          text: "The recorder restarts if a zone is bypassed. It's a known fault."
+vivian-ashcombe:
+  topics:
+    - key: the-painting
+      prompt: Ask about the painting.
+      statements:
+        - key: vivian-painting
+          text: "It's the heart of the collection. My father bought it in 1979."
+    - key: the-insurance
+      prompt: Ask why the insurance cover went up.
+      requires: { examined: insurance-rider }
+      statements:
+        - key: insurance-explanation
+          text: "Because the bank told me to. I can show you the letter if you like."
+  reactions:
+    - evidence: insurance-rider
+      statements:
+        - key: hands-over-letter
+          text: "Here. The bank's letter. I had no choice."
+felix-okafor:
+  topics:
+    - key: the-restoration
+      prompt: Ask about restoring the Marchand.
+      statements:
+        - key: restored-last-month
+          text: "I cleaned it last month and brought it back myself. It was in perfect condition."
+    - key: the-crate
+      prompt: Ask about the crate addressed to his studio.
+      statements:
+        - key: no-pickup-booked
+          text: "I never arranged a pickup. That crate was meant to stay here until next week."
+    - key: the-evening
+      prompt: Ask where he was during the talk.
+      statements:
+        - key: felix-courtyard
+          text: "In the courtyard with Harriet from twenty to ten until just after ten."
+          claim: { from: "21:40", to: "22:05", location: courtyard }
+harriet-lowe:
+  topics:
+    - key: the-painting
+      prompt: Ask about the painting.
+      statements:
+        - key: should-have-been-mine
+          text: "It should have been mine. Everyone knows that. That doesn't make me a thief."
+    - key: the-evening
+      prompt: Ask where she was during the talk.
+      statements:
+        - key: harriet-courtyard
+          text: "Outside with Felix. The talk was dreadful."
+          claim: { from: "21:40", to: "22:05", location: courtyard }
+sam-pike:
+  topics:
+    - key: guests-phones
+      prompt: Ask what the guests were doing during the evening.
+      statements:
+        - key: phones-everywhere
+          text: "Phones out all night. One gentleman kept showing people his pictures of the hall."
+    - key: the-courtyard
+      prompt: Ask who came out to the courtyard.
+      statements:
+        - key: kept-a-log
+          text: "I write down everyone who comes through the courtyard. It's all in my book."

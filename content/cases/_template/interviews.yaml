@@ -1,0 +1,9 @@
+todo-person:
+  topics:
+    - key: todo-topic
+      prompt: TODO the question the player asks
+      statements:
+        - key: todo-statement
+          text: "TODO what they say"
+          # claim: { from: "21:30", to: "22:00", location: todo-location }
+  reactions: []

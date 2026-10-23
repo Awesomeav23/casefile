@@ -1,0 +1,26 @@
+# The Missing Masterpiece: M3 skeleton (validates; full content and art arrive in M17).
+# © 2026 Avnish Ozarkar. All rights reserved. See content/COPYRIGHT.md.
+format_version: 1
+slug: the-missing-masterpiece
+title: The Missing Masterpiece
+tagline: A priceless painting vanishes during a private preview.
+difficulty: standard
+estimated_minutes: 60
+tags: [theft, art, locked-room]
+content_notes: []
+setting:
+  world_date: 2026-03-13
+  era_note: Present day, London.
+copyright: "© 2026 Avnish Ozarkar. All rights reserved."
+cover_image: assets/cover.webp
+cover_alt: The empty frame on the East Room wall.
+briefing: |
+  On the evening of Friday 13 March, the Ashcombe Gallery held a private preview of its spring
+  exhibition. At 22:15 a guest noticed that *The Cartographer's Daughter* (1891, Aurélie Marchand),
+  the gallery's most valuable work, insured for £2.4 million, was gone from the locked East Room.
+
+  The alarm never sounded. Nobody has left the grounds with anything large enough to hold the
+  canvas. You have the morning before the insurer's investigators arrive.
+objective: |
+  Determine who took the painting, how they removed it without triggering the alarm, why they
+  did it, and where it is now.

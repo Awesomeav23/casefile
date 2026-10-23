@@ -1,6 +1,6 @@
 # Casefile: Case Design Standards
 
-**Status:** Planning draft. The format below is the planned authoring contract. The validator and importer that enforce it don't exist yet.
+**Status:** Format v1 is implemented and enforced by `manage.py validate_case` (M3). The importer arrives in M4. The *Missing Masterpiece* folder is a validating skeleton, and the full content comes in M17.
 **Related:** [PRODUCT_SPEC](PRODUCT_SPEC.md) · [DATA_MODEL](DATA_MODEL.md) · [ARCHITECTURE](ARCHITECTURE.md) · [TESTING_PLAN](TESTING_PLAN.md)
 
 This document defines how a mystery is structured, written, and validated so that **adding a case is a content task, not a coding task**. It uses *The Missing Masterpiece* as a worked example. That case is one of several planned cases, not the whole application.
@@ -98,7 +98,7 @@ requires:
 | `contradiction: <key>` | Player has correctly flagged that contradiction |
 | `discovered: <type>:<ref>` | The referenced item is in the casefile |
 
-Combinators: `all: [...]`, `any: [...]`, nestable. **No negation, no counters, no randomness.**
+Combinators: `all: [...]`, `any: [...]`, nestable, and each needs **at least one** condition (an empty list is an error). **No negation, no counters, no randomness.**
 
 **Defaults when `requires` is omitted:**
 
@@ -108,13 +108,15 @@ Combinators: `all: [...]`, `any: [...]`, nestable. **No negation, no counters, n
 | Location | `start` |
 | Evidence with a `location` | Discovered on `visited: <its location>` (an explicit `requires` is **added to** that implicit condition) |
 | Evidence without a `location` | `start` (e.g. handed over in the briefing) |
-| Topic | Available once its person is discovered |
+| Topic | Available once its person is discovered (an explicit `requires` is **added to** that) |
 | Statement | Revealed when its topic is asked or its reaction is triggered (statements don't take `requires`) |
-| Timeline event | **Required**; no default |
+| Timeline event | **Required**, and its source item must also be discovered (added implicitly, so an event never cites a hidden item) |
 
 ## 5. File specifications
 
-Fields marked `*` are required. Text fields accept a restricted Markdown subset (paragraphs, emphasis, lists, blockquotes; no raw HTML).
+Fields marked `*` are required, and unknown fields are rejected. Text fields accept a restricted Markdown subset (paragraphs, emphasis, lists, blockquotes). **Raw HTML is rejected by the validator.**
+
+YAML tips: duplicate keys in a mapping are an error (plain YAML would silently keep the last one). Quote any value that contains a comma inside `{ … }` flow mappings, e.g. `{ key: overnight, label: "Overnight, after closing." }`.
 
 ### 5.1 `case.yaml`
 
@@ -310,9 +312,20 @@ walkthrough:                                              # * a minimal winning 
       method: { answer: override-bypass, cite: [alarm-log] }
 ```
 
-**Citation shorthand** (in `proof`, `cleared_by`): a bare key is evidence (`alarm-log`). Other types use a prefix: `statement:corinne-blake/at-lectern`, `contradiction:lectern-photo`. The importer normalises all of these to the typed reference format in DATA_MODEL §6.
+**Walkthrough steps** (one action per step; it must end with exactly one `accuse`):
 
-Scoring per question = answer points (if correct) + proof points (if a `full` set is contained in the citations; half if only a `partial` set is). Proof points are awarded **only if the answer is correct**. Score % = earned / maximum. Outcome tiers are in PRODUCT_SPEC §6. Hint use doesn't affect the score unless D-21 decides otherwise.
+| Step | Meaning |
+|---|---|
+| `visit: <location>` | visit a discovered location |
+| `examine: <evidence>` | open a discovered evidence item |
+| `ask: <person>/<topic>` | ask an available topic |
+| `present: <person>/<evidence>` | show evidence to a person |
+| `flag: { statement: <p>/<s>, evidence: <e> }` or `flag: { statement: <p>/<s>, other_statement: <p>/<s> }` | flag a pairing; it must match an authored contradiction |
+| `accuse: { <question>: { answer: <key>, cite: [...] }, ... }` | cited items must be discovered; the result must be Solved · Airtight |
+
+**Citation shorthand** (in `proof`, `cleared_by`, `mentions`, walkthrough `cite`): a bare key is evidence (`alarm-log`). Other types use a prefix: `statement:corinne-blake/at-lectern`, `contradiction:lectern-photo`. The importer normalises all of these to the typed reference format in DATA_MODEL §6.
+
+Scoring per question = answer points (if correct) + proof points (if a `full` set is contained in the citations; half, rounded down, if only a `partial` set is). Proof points are awarded **only if the answer is correct**. Score % = earned / maximum. Outcome tiers are in PRODUCT_SPEC §6. Hint use doesn't affect the score unless D-21 decides otherwise.
 
 ### 5.10 `spoilers/hints.yaml` (D-04)
 
@@ -440,6 +453,18 @@ The repository is public, so `spoilers/` files are readable by anyone who browse
 4. **Fairness check**: rules F1–F6 and F12–F14 run against the final reachable set.
 5. **Walkthrough check**: the `walkthrough` is replayed through the real discovery engine and scoring service.
 6. **Report**: errors block import. Warnings (e.g. F3 orphans) are listed. The validator can optionally output the unlock graph as Mermaid text.
+
+```bash
+backend/.venv/bin/python backend/manage.py validate_case content/cases/<slug>            # one case
+backend/.venv/bin/python backend/manage.py validate_case --all                           # every case not starting with "_"
+backend/.venv/bin/python backend/manage.py validate_case content/cases/<slug> --mermaid  # also print the unlock graph
+backend/.venv/bin/python backend/manage.py validate_case --all --strict                  # warnings fail too
+```
+
+How the hint checks (F12) work:
+- **Offered before resolved:** the validator looks for a reachable state where `resolved_when` is still false and `requires` is true.
+- **Mentions are safe:** for every minimal way to satisfy `requires` (its disjunctive normal form), it discovers only what those facts imply. Each mentioned item must be found in every case. Flagging a contradiction counts as having found both its sides, and examining or asking counts as having found the item or topic.
+- **Coverage (F13):** an item counts as covered when it appears in a track's `mentions` or `resolved_when`.
 7. **Import** as draft → staff playtest in preview mode → **publish**.
 
 ## 9. Example case: *The Missing Masterpiece* (player-visible content)

@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0–M2 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), and the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0–M3 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client), and the case format with its validator (`validate_case`). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -117,6 +117,7 @@ curl localhost:8010/api/v1/health/                    # → {"status":"ok","data
 .venv/bin/python manage.py createsuperuser            # optional: Django admin at /admin/
 
 # 5. Backend checks (the same ones CI runs)
+.venv/bin/python manage.py validate_case --all              # every case (fairness + solvability)
 .venv/bin/python manage.py makemigrations --check --dry-run
 .venv/bin/python manage.py spectacular --validate --fail-on-warn --file /dev/null
 .venv/bin/pytest
@@ -139,13 +140,12 @@ Stop the database with `docker compose stop db`. `docker compose down -v` also d
 
 ### Planned (later milestones)
 
-> These steps describe the **intended** workflow. They don't work yet: the case commands arrive in M3/M4 and Playwright in M7+.
+> These steps describe the **intended** workflow. They don't work yet: `import_case` arrives in M4 and Playwright in M7+.
 
 ```bash
-# Cases (backend venv from step 4)
+# Import a case into the database (backend venv from step 4)
 cd backend
-python manage.py validate_case ../content/cases/the-missing-masterpiece
-python manage.py import_case   ../content/cases/the-missing-masterpiece --publish
+python manage.py import_case ../content/cases/the-missing-masterpiece --publish
 
 # End-to-end tests
 npx playwright test                # from repo root, with both servers running

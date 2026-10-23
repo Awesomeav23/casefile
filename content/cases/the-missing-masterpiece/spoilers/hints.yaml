@@ -1,0 +1,88 @@
+- key: test-curator-alibi
+  goal: Test the curator's account of the evening.
+  priority: 10
+  requires:
+    all:
+      - asked: corinne-blake/her-talk
+      - visited: main-hall
+      - asked: sam-pike/guests-phones
+  resolved_when: { contradiction: lectern-photo }
+  mentions: ["statement:corinne-blake/at-lectern", guest-photo]
+  tiers:
+    - level: nudge
+      text: Corinne was confident about where she was all evening. Is anyone else's view of the Main Hall worth checking?
+    - level: pointer
+      text: Guests were taking photos all evening. Look at what was captured in the Main Hall next to Corinne's account of her talk.
+    - level: direction
+      text: Compare Corinne's statement about being at the lectern until ten with the time-stamped guest photo from the Main Hall.
+- key: who-touched-the-system
+  goal: Find out who changed the alarm settings.
+  priority: 20
+  requires:
+    all:
+      - examined: alarm-log
+      - asked: corinne-blake/the-alarm-system
+  resolved_when: { contradiction: override-user }
+  mentions: [alarm-log, "statement:corinne-blake/never-touch-system"]
+  tiers:
+    - level: nudge
+      text: Someone used an override that afternoon. Whose account was it?
+    - level: pointer
+      text: Read the user names in the alarm log, then think about who told you they never touch the system.
+    - level: direction
+      text: Compare Corinne's statement that she never touches the security system with the 15:10 entry in the alarm log.
+- key: where-did-it-go
+  goal: Work out where the painting could be hidden.
+  priority: 30
+  requires: { visited: curators-office }
+  resolved_when: { examined: return-crate }
+  mentions: [courier-booking]
+  tiers:
+    - level: nudge
+      text: The painting never left the grounds. Where could something that size wait without anyone noticing?
+    - level: pointer
+      text: Check what the curator's office was arranging for the next day.
+    - level: direction
+      text: Read the courier confirmation, then see what is waiting for collection in the loading bay.
+- key: why-now
+  goal: Understand why someone acted this week.
+  priority: 40
+  requires: { contradiction: lectern-photo }
+  resolved_when: { examined: dismissal-draft }
+  mentions: [dismissal-draft]
+  tiers:
+    - level: nudge
+      text: Catching Corinne out changed things. Has anything new turned up?
+    - level: pointer
+      text: A letter surfaced from the owner's desk tray. Read it closely.
+    - level: direction
+      text: Read the letter from Vivian's desk tray and note who it is addressed to and what it says about the painting.
+- key: the-guards-story
+  goal: Check the head of security's account.
+  priority: 50
+  requires:
+    all:
+      - asked: daniel-reyes/the-cameras
+      - visited: courtyard
+  resolved_when: { contradiction: monitor-room }
+  mentions: ["statement:daniel-reyes/watched-monitors", valet-log]
+  tiers:
+    - level: nudge
+      text: Daniel says he never left his post. Did anyone else see him that evening?
+    - level: pointer
+      text: Someone in the courtyard was writing down who came and went.
+    - level: direction
+      text: Compare Daniel's statement that he never left the monitors with the valet's courtyard log.
+- key: the-insurance-question
+  goal: Find out why the insurance cover went up.
+  priority: 60
+  requires: { examined: insurance-rider }
+  resolved_when: { examined: lender-letter }
+  mentions: [insurance-rider]
+  tiers:
+    - level: nudge
+      text: A bigger insurance policy looks suspicious. Is there an innocent reason?
+    - level: pointer
+      text: The person who signed the amendment may be able to explain it.
+    - level: direction
+      text: Show the insurance amendment to Vivian Ashcombe.

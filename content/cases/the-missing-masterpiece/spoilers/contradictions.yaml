@@ -1,0 +1,14 @@
+- key: lectern-photo
+  statement: corinne-blake/at-lectern
+  conflicts_with: { evidence: guest-photo }
+  explanation: The guest's photo, time-stamped 21:51, shows the lectern empty during the time Corinne says she was speaking.
+- key: override-user
+  statement: corinne-blake/never-touch-system
+  conflicts_with: { evidence: alarm-log }
+  accept_also:
+    - { evidence: alarm-test-email }
+  explanation: The 15:10 maintenance override was made under Corinne's own user name, for a test she asked for.
+- key: monitor-room
+  statement: daniel-reyes/watched-monitors
+  conflicts_with: { evidence: valet-log }
+  explanation: The valet logged Daniel in the courtyard from 21:44 to 21:56, so he didn't watch the monitors all evening.

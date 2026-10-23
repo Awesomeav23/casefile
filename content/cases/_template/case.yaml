@@ -1,0 +1,18 @@
+format_version: 1
+slug: TODO-your-slug            # must equal the folder name
+title: TODO
+tagline: TODO one line
+difficulty: standard            # introductory | standard | hard
+estimated_minutes: 45
+tags: []
+content_notes: []               # e.g. [death, alcohol]
+setting:
+  world_date: 2026-01-01
+  era_note: TODO
+copyright: "© 2026 TODO. All rights reserved."
+cover_image: assets/cover.webp
+cover_alt: TODO what a careful observer would notice
+briefing: |
+  TODO what happened, as the player first hears it.
+objective: |
+  TODO what the player must determine.

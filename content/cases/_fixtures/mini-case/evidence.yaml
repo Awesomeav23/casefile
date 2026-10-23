@@ -1,0 +1,28 @@
+- key: empty-rack
+  title: Empty bicycle rack
+  kind: object
+  location: shed
+  summary: The rack where the bicycle was kept.
+  body: The rack is empty. Fresh tyre marks lead out towards the lane.
+- key: bus-ticket
+  title: Bus ticket
+  kind: record
+  location: kitchen
+  people: [ada]
+  summary: A bus ticket pinned to the noticeboard.
+  body: "Inbound, market stop to village. Stamped 09:40."
+- key: repair-quote
+  title: Repair quote
+  kind: document
+  location: kitchen
+  people: [ada]
+  summary: A quote from the bicycle shop.
+  body: "Repair to Ms Moss's bicycle: new frame, £180. Ready in three weeks."
+  requires: { asked: ben/the-bike }
+- key: gym-pass
+  title: Gym entry record
+  kind: record
+  people: [ben]
+  summary: Ben's gym entry record for Saturday.
+  body: "Entry 08:55. Exit 10:20."
+  requires: { asked: ben/the-morning }

@@ -73,7 +73,10 @@ A custom user model is defined from the first migration (Django recommends it, a
 |---|---|
 | `accounts/identity.py` | `get_player(request)` returns a `Player` (either `user` or `guest_id`). It creates a guest ID lazily on the first write, never on read-only browsing. Every playthrough query is scoped through it |
 | `accounts/claim.py` | On register/login, reassigns the session's guest playthroughs to the user in one transaction, applying the D-23 conflict rule, then clears the guest ID |
-| `content/schema.py` | Pydantic (or dataclass + manual checks) models for each YAML file; format versioning |
+| `content/schema.py` | Pydantic models for each YAML file (format v1; unknown fields rejected) |
+| `content/loader.py` | Reads a case folder (duplicate YAML keys rejected) and reports errors by file, item key, and field path |
+| `content/compile.py` | Turns a loaded case into the engine's graph of *effective* conditions (implicit rules of CASE_DESIGN §4) |
+| `content/report.py` | `Issue` / `Report` returned by the validator |
 | `content/validator.py` | Reference, graph, solvability, hint, and fairness checks (CASE_DESIGN §6.7, §8). Pure functions over parsed content; no database needed |
 | `content/assets.py` | Deterministically hashes case assets (`sha256` of file bytes) and copies them to the static source dir at **build time** (`manage.py collect_case_assets`) |
 | `content/importer.py` | Transactionally upserts a validated case into the database by stable keys; stores hashed asset paths computed by `assets.py` (same function, so paths match); enforces the update policy (§8) |
@@ -83,7 +86,7 @@ A custom user model is defined from the first migration (Django recommends it, a
 | `play/flags.py` | Create / revise / remove contradiction flags. Verifies a pairing against authored contradictions (incl. `accept_also`, either order). On a match: marks the flag confirmed, adds the `contradiction` fact, runs the engine. No penalty bookkeeping (D-03) |
 | `play/hints.py` | Computes offered hint tracks (`requires` met, `resolved_when` not met) from facts; reveals the next tier on request; records `HintReveal` rows |
 | `play/visibility.py` | Builds the player's casefile from discovered items only. **The only path by which content reaches player serializers** |
-| `play/scoring.py` | Scores an accusation against the answer key; computes outcome tier (hint use doesn't affect it unless D-21 decides otherwise) |
+| `play/scoring.py` | **Pure core** (built in M3, used by the validator's walkthrough check): scores an accusation against the answer key and computes the outcome tier (hint use doesn't affect it unless D-21 decides otherwise). M14 wires it to the API |
 | `play/results.py` | Assembles the results payload (solution, red herrings, missed key evidence, statistics incl. hints used); only callable for accused playthroughs |
 
 Views stay thin: resolve player → load playthrough (player-scoped) → call service → serialize.

@@ -1,0 +1,7 @@
+# Evidence with a location is found by visiting it; `requires` adds extra conditions.
+- key: todo-evidence
+  title: TODO
+  kind: document               # document | photo | object | record | correspondence | transcript
+  location: todo-location
+  summary: TODO neutral one line (don't give away its significance)
+  body: TODO full text

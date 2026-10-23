@@ -1,0 +1,15 @@
+# SPOILER.
+answers:
+  culprit:
+    correct: todo-person
+    points: 100
+    explanation: TODO
+summary: TODO
+narrative: |
+  TODO the full "what really happened".
+red_herrings: []
+key_evidence: [todo-evidence]
+answer_terms: []
+walkthrough:
+  - accuse:
+      culprit: { answer: todo-person }

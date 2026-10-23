@@ -1,0 +1,4 @@
+- key: market-ticket
+  statement: ada/at-market
+  conflicts_with: { evidence: bus-ticket }
+  explanation: The ticket shows Ada back in the village at 09:40, not at the market until noon.

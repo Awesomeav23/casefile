@@ -1,0 +1,20 @@
+# Test fixture: the smallest complete case. MIT-licensed with the code (content/COPYRIGHT.md).
+format_version: 1
+slug: mini-case
+title: The Borrowed Bicycle
+tagline: A bicycle vanishes from a garden shed on a quiet Saturday morning.
+difficulty: introductory
+estimated_minutes: 10
+tags: [theft, fixture]
+content_notes: []
+setting:
+  world_date: 2026-05-09
+  era_note: Present day, a village.
+copyright: "Test fixture (MIT)."
+cover_image: assets/cover.webp
+cover_alt: An empty bicycle rack inside a garden shed.
+briefing: |
+  At ten o'clock on Saturday morning, Ben Hart found the shed door open and his bicycle gone.
+  Only two people had a key: Ben, and his neighbour Ada Moss.
+objective: |
+  Work out who took the bicycle, and why.

@@ -1,0 +1,84 @@
+answers:
+  culprit:
+    correct: corinne-blake
+    points: 30
+    explanation: Corinne Blake left the lectern at the intermission, used the sensor bypass she had set up that afternoon, and packed the canvas into the restorer's return crate.
+  opportunity:
+    correct: during-intermission
+    points: 10
+    proof:
+      points: 5
+      full: [[guest-photo], ["contradiction:lectern-photo"]]
+    explanation: The programme says the talk ran until ten, but the 21:51 photo shows an empty lectern and an intermission slide.
+  method:
+    correct: override-bypass
+    points: 10
+    proof:
+      points: 10
+      full: [[alarm-log], [alarm-test-email, camera-gap]]
+      partial: [[camera-gap]]
+    explanation: The log shows a maintenance override under CBLAKE at 15:10 and the East Room sensor bypassed from 21:47 to 22:03.
+  motive:
+    correct: dismissal-and-buyer
+    points: 10
+    proof:
+      points: 10
+      full: [[dismissal-draft]]
+      partial: [["statement:corinne-blake/buyer-admission"]]
+    explanation: Vivian's draft letter ended Corinne's job and put the Marchand up for sale; a private buyer had already approached her.
+  location-now:
+    points: 0
+    proof:
+      points: 15
+      full: [[return-crate], [courier-booking]]
+    explanation: The canvas is in the crate labelled for Felix Okafor's studio, booked for collection at 14:00 from the curator's workstation.
+summary: Corinne Blake stole the Marchand during the intermission, using an alarm override she set up that afternoon, to sell it before she was dismissed.
+narrative: |
+  Corinne learned from a draft letter that Vivian meant to dismiss her and sell the Marchand. A
+  private buyer had approached her months earlier. At 15:10 she logged a maintenance override,
+  under cover of an alarm test she had asked for, and scheduled a bypass for the East Room sensor.
+  At 16:02 she booked a courier from her workstation to collect "one crate, Okafor Studio – return".
+
+  Her talk was printed as 21:30–22:00, but she ended it at 21:45 with an intermission slide.
+  Between 21:47 and 22:03 she cut the canvas from its frame, wearing handling gloves, and packed it
+  into the crate in the loading bay. The bypass made the CCTV recorder restart, so nothing was
+  recorded between 21:48 and 22:04.
+red_herrings:
+  - person: vivian-ashcombe
+    suspicion: She increased the insurance cover two weeks ago.
+    cleared_by: [lender-letter]
+    explanation: Her bank made the higher cover a condition of renewing the gallery's loan.
+  - person: daniel-reyes
+    suspicion: He controls the alarm, the cameras went down, and he lied about where he was.
+    cleared_by: [alarm-log, "contradiction:monitor-room"]
+    explanation: The override was made under Corinne's user name. Daniel's lie covered a smoke break, not the theft.
+  - person: felix-okafor
+    suspicion: The crate is addressed to his studio.
+    cleared_by: [courier-booking, valet-log]
+    explanation: The pickup was booked from the curator's workstation, and the valet logged Felix in the courtyard throughout.
+  - person: harriet-lowe
+    suspicion: She said publicly that the painting should have been hers.
+    cleared_by: [valet-log]
+    explanation: The valet logged her in the courtyard with Felix from 21:40 to 22:05.
+key_evidence: [guest-photo, alarm-log, courier-booking, dismissal-draft, return-crate, cotton-gloves]
+answer_terms: ["took the painting", "in the crate", "dismissal"]
+walkthrough:
+  - visit: main-hall
+  - examine: event-programme
+  - ask: corinne-blake/her-talk
+  - ask: sam-pike/guests-phones
+  - examine: guest-photo
+  - flag: { statement: corinne-blake/at-lectern, evidence: guest-photo }
+  - examine: dismissal-draft
+  - visit: security-office
+  - examine: alarm-log
+  - visit: curators-office
+  - examine: courier-booking
+  - visit: loading-bay
+  - examine: return-crate
+  - accuse:
+      culprit: { answer: corinne-blake }
+      opportunity: { answer: during-intermission, cite: ["contradiction:lectern-photo"] }
+      method: { answer: override-bypass, cite: [alarm-log] }
+      motive: { answer: dismissal-and-buyer, cite: [dismissal-draft] }
+      location-now: { cite: [return-crate] }

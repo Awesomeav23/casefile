@@ -1,0 +1,6 @@
+intro: You get one accusation for this investigation.
+questions:
+  - key: culprit
+    prompt: TODO who did it?
+    kind: person
+    required_for_solve: true

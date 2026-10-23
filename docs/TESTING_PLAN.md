@@ -81,6 +81,11 @@ One failing fixture per rule:
 - a `case.yaml` without `copyright` (D-20);
 - an image without alt text.
 
+### 2.5a Implemented in M3
+- `play/tests/test_conditions.py`, `test_engine.py`, `test_scoring.py`: TESTING_PLAN §2.1, §2.2 (engine core), §2.4.
+- `content/tests/test_validator.py`: the fixture is clean, the Masterpiece skeleton has no errors, the Mermaid output, and **one broken copy of the fixture per rule** (schema, YAML, duplicate keys, slug, conditions, references, assets, HTML, timeline, F1–F6, F12–F14, unreachable contradictions). Each asserts the rule and the file/key it names.
+- `content/tests/test_validate_command.py`: exit codes, `--all` skipping `_` folders, `--mermaid`, `--strict`.
+
 ### 2.6 Importer (`content/importer.py`)
 - First import creates all rows; re-import of identical content is a no-op (hash match).
 - Text edit → updates in place, `content_version` unchanged.

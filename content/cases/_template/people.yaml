@@ -1,0 +1,8 @@
+# One entry per character. Suspects can be accused; witnesses can't.
+- key: todo-person
+  name: TODO
+  role: TODO
+  is_suspect: true
+  summary: TODO one line
+  default_reaction: "TODO what they say when shown irrelevant evidence"
+  # requires: start            # optional; default start

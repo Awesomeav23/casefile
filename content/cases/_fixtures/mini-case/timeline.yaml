@@ -1,0 +1,22 @@
+- key: ada-claim
+  title: Ada at the market (her account)
+  from: "09:00"
+  to: "12:00"
+  people: [ada]
+  certainty: claimed
+  source: { statement: ada/at-market }
+  requires: { asked: ada/the-morning }
+- key: ticket-stamp
+  title: Ada's bus back to the village
+  from: "09:40"
+  people: [ada]
+  certainty: verified
+  source: { evidence: bus-ticket }
+  requires: { examined: bus-ticket }
+- key: theft
+  title: Bicycle found missing
+  from: "10:00"
+  location: shed
+  certainty: verified
+  source: { evidence: empty-rack }
+  requires: { examined: empty-rack }

@@ -1,0 +1,12 @@
+- key: ada
+  name: Ada Moss
+  role: Neighbour
+  is_suspect: true
+  summary: Has a spare key to the shed.
+  default_reaction: "I don't see what that has to do with me."
+- key: ben
+  name: Ben Hart
+  role: Owner of the bicycle
+  is_suspect: true
+  summary: Reported the bicycle missing.
+  default_reaction: "No idea, sorry."

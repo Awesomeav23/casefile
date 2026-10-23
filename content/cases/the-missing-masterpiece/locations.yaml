@@ -1,0 +1,18 @@
+- key: east-room
+  name: The East Room
+  description: A small, locked gallery off the main hall. One painting hung here tonight.
+- key: main-hall
+  name: The Main Hall
+  description: The heart of the preview. A lectern and a projector screen stand at the far end.
+- key: security-office
+  name: The Security Office
+  description: A cramped room behind reception, with the alarm panel and CCTV monitors.
+- key: curators-office
+  name: The Curator's Office
+  description: Books, crates of catalogues, and a workstation left logged in.
+- key: loading-bay
+  name: The Loading Bay
+  description: Where artworks arrive and leave. A few crates wait for collection.
+- key: courtyard
+  name: The Courtyard
+  description: Valet parking and the smokers' corner. Sam Pike's lectern stands by the gate.

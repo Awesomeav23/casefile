@@ -1,6 +1,6 @@
 # Casefile: Development Roadmap
 
-**Status:** M0–M2 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
+**Status:** M0–M3 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
 **Related:** every other document. Feature tags (Essential/Optional) come from [PRODUCT_SPEC](PRODUCT_SPEC.md). Decisions `D-xx` (decided and open) are listed in [PRODUCT_SPEC §9](PRODUCT_SPEC.md#9-decisions).
 
 The product vision (PRODUCT_SPEC) describes **everything Casefile should become**. This roadmap describes **the order in which to build it**. Milestones **M0–M20** make up v1.0: all Essential features (including guest play and hints), three complete cases, and deployment on Render. M21+ are post-1.0 Optional enhancements.
@@ -118,7 +118,7 @@ Optional Render spike: not done (no Render resources created).
   - `brass-600` and `tag-red-500` are restricted to UI boundaries and large text (UI_UX_GUIDELINES §2).
 - **Fixed dev ports:** Django 8010 and Vite 5180, because 8000 and 5173 clash with other local projects.
 
-## M3: Case content format, validator & hint schema
+## M3: Case content format, validator & hint schema ✓ (completed 2026-10-23)
 **Depends on:** M1
 **Scope:** YAML schema models (`content/schema.py`) for format v1 (CASE_DESIGN §5, **including `spoilers/hints.yaml` §5.10 and the `copyright` field**); `play/conditions.py` (pure); the **pure discovery-engine core** in `play/engine.py` (facts → discovered set, no database; ARCHITECTURE §3.2); validator: references, defaults, graph simulation, fairness rules F1–F6 and **hint rules F12–F14** (F6 initially limited to engine-level walkthrough), Mermaid graph output; `manage.py validate_case`; fixture `mini-case` (with 2 hint tracks); `content/cases/_template/`; skeleton files for *The Missing Masterpiece* (enough to validate).
 **Decide during milestone:** empty `any` semantics; whether Markdown subset is validated at import. (D-25 is decided: spoilers may be committed to the public repo, with warnings.)
@@ -127,6 +127,15 @@ Optional Render spike: not done (no Render resources created).
 - `mini-case` validates clean; each deliberately broken fixture fails with a readable error that names the file and key.
 - The Missing Masterpiece skeleton validates.
 
+**Delivered:** `play/conditions.py`, `play/engine.py` (pure core: discover, available actions, exhaustive simulation, guaranteed-items and avoid-a-condition analysis), `play/scoring.py` (pure), `content/schema.py` (Pydantic 2.14), `loader.py` (PyYAML 6, duplicate keys rejected), `compile.py`, `validator.py` (structure checks; F1–F6; F12–F14; unreachable contradictions; Mermaid), `manage.py validate_case` (`--all`, `--mermaid`, `--strict`); fixture `_fixtures/mini-case`; `_template/`; *The Missing Masterpiece* skeleton (6 people, 6 locations, 13 evidence, 3 contradictions, 6 hint tracks, 12 timeline events), which validates with 0 errors and 0 warnings and has an Airtight walkthrough; 116 new backend tests (141 total); CI validates every case.
+**Decided during milestone:**
+- Empty `all`/`any` is an error.
+- Raw HTML is rejected by the validator (the Markdown subset is enforced by the renderer later).
+- Topics and timeline events gain implicit conditions: the topic's person, the event's source.
+- Partial proof scores half, rounded down.
+- Assets must be real WebP files.
+- Duplicate YAML keys are an error.
+- Pure scoring was pulled forward from M14, so F6 can check for an Airtight result.
 ## M4: Content models & importer
 **Depends on:** M3
 **Decisions:** D-14 (open; default policy implemented).

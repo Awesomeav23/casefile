@@ -1,0 +1,25 @@
+ada:
+  topics:
+    - key: the-morning
+      prompt: Ask where she was on Saturday morning.
+      statements:
+        - key: at-market
+          text: "I was at the market from nine until noon."
+          claim: { from: "09:00", to: "12:00" }
+  reactions:
+    - evidence: bus-ticket
+      statements:
+        - key: ticket-reaction
+          text: "I may have popped home for my purse."
+ben:
+  topics:
+    - key: the-morning
+      prompt: Ask where he was on Saturday morning.
+      statements:
+        - key: at-gym
+          text: "At the gym. They log everyone in and out."
+    - key: the-bike
+      prompt: Ask about Ada's own bicycle.
+      statements:
+        - key: bike-broke
+          text: "Her bike broke last week. She was furious about the repair price."
