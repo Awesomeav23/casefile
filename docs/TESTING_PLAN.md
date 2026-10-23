@@ -18,7 +18,7 @@
 
 Test-first is the default for services (`conditions`, `engine`, `scoring`, `validator`). They are pure and their correctness is central.
 
-**Fixtures:** a tiny synthetic case, `content/cases/_fixtures/mini-case/` (2 suspects, 2 locations, 4 evidence, 1 contradiction), keeps unit tests fast and spoiler-free. Real cases are tested by the content suite.
+**Fixtures:** a tiny synthetic case, `content/cases/_fixtures/mini-case/` (2 suspects, 2 locations, 4 evidence, 1 contradiction, 2 hint tracks), keeps unit tests fast and spoiler-free. Real cases are tested by the content suite.
 
 ## 2. Backend unit tests
 
@@ -132,7 +132,7 @@ Specific scenarios:
    - the explanation of a contradiction appears only after a **confirmed** flag, never for an unconfirmed one.
    - Run the progressive test twice per case: once as a **guest** and once as an **account holder**.
 2. **Media URL test:** asset URLs for undiscovered evidence aren't derivable from keys (hashed names), and aren't present in responses.
-3. **Serializer guard test:** a static test that fails if any player-facing serializer module imports a spoiler model (`AnswerKey`, `CaseSolution`, `RedHerring`, `Contradiction`, `HintTrack`, `Hint`). The only allowed paths are `visibility.py` and `hints.py`.
+3. **Serializer guard test:** a static test that fails if any **player-facing serializer module** imports a spoiler model (`AnswerKey`, `CaseSolution`, `RedHerring`, `Contradiction`, `HintTrack`, `Hint`). Services may read spoiler models (`flags.py`, `hints.py`, `scoring.py`, `results.py`, `engine.py`), but serializers receive spoiler-derived text only through `visibility.py`, `hints.py`, and `results.py`, which are covered by the progressive leak test.
 4. **Staff-only fields:** `requires` appears only in staff preview playthroughs.
 
 ## 6. Mystery-logic validation (per real case)
@@ -181,7 +181,7 @@ Parametrised over every folder in `content/cases/` except those whose names star
 
 ## 8. End-to-end tests (Playwright)
 
-Seeded with the fixture case and *The Missing Masterpiece* via `import_case` before the run. Database reset between specs.
+Seeded with the fixture case and every case under `content/cases/` (all three by M18) via `import_case` before the run. Database reset between specs.
 
 | Spec | Journey |
 |---|---|

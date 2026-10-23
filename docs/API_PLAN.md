@@ -66,7 +66,8 @@ Import and validation are **CLI only** (`manage.py validate_case`, `import_case`
 { "email": "sam@example.com", "password": "correct horse battery", "display_name": "Sam" }
 // 201
 { "user": { "id": 12, "email": "sam@example.com", "display_name": "Sam", "is_staff": false,
-            "preferences": { "text_scale": 1, "reduced_motion": false, "theme": "dark", "show_tips": true } } }
+            "preferences": { "text_scale": 1, "reduced_motion": false, "theme": "dark", "show_tips": true } },
+  "claimed": { "playthroughs": [], "conflicts": [] } }
 ```
 Errors: 400 `validation_error` (duplicate email, weak password).
 
@@ -76,7 +77,7 @@ Errors: 400 `validation_error` (duplicate email, weak password).
 ```json
 "claimed": {
   "playthroughs": [ { "id": "6c1e…", "case": "the-missing-masterpiece", "status": "in_progress" } ],
-  "conflicts": [ { "case": "the-missing-masterpiece", "kept": "6c1e…", "abandoned": "91aa…" } ]   // D-23 default rule
+  "conflicts": [ { "case": "the-missing-masterpiece", "kept": "6c1e…", "abandoned": "91aa…" } ]   // D-23 rule
 }
 ```
 `claimed` is `{ "playthroughs": [], "conflicts": [] }` when there was no guest progress.
@@ -104,7 +105,7 @@ Errors: 400 `validation_error` (duplicate email, weak password).
       "cover_image": "/static/cases/the-missing-masterpiece/9f2c….webp",
       "cover_alt": "The empty frame on the East Room wall.",
       "published_at": "2026-11-01T00:00:00Z",
-      "player": { "status": "in_progress", "playthrough_id": "6c1e…", "best_tier": null }   // null when logged out
+      "player": { "status": "in_progress", "playthrough_id": "6c1e…", "best_tier": null }   // null for a fresh visitor
     }
   ]
 }
@@ -293,7 +294,7 @@ Response (200):
 
 ## 6. Accusation & results
 
-**Investigation review (D-02).** The review screen before the accusation is built client-side from the already-loaded casefile: confirmed contradictions, active theory, and loose ends (discovered but unexamined evidence, unasked topics, unvisited locations). It needs no extra endpoint and reveals nothing new.
+**Investigation review (D-02).** The review screen before the accusation is built client-side from data the workspace already has: the casefile (confirmed contradictions, unconfirmed flags, suspicion markers, loose ends: unexamined evidence, unasked topics, unvisited locations), the theories list (active theory), and the board (pinned items). It needs no extra endpoint and reveals nothing new.
 
 **GET `/playthroughs/{id}/accusation-form/`**
 ```json

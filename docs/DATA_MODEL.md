@@ -330,7 +330,7 @@ Used in `answers.cite`, `theory.supporting`, `answerkey.proof_*`, `redherring.cl
 
 - **Account deletion** cascades to profile, playthroughs, events, facts, discoveries, flags, hint reveals, notes, board, theories, markers, and accusations.
 - **Guest data** (D-22): `purge_guest_data` deletes guest-owned playthroughs (and their cascades) whose `last_active_at` is older than the retention period (default 90 days). "Forget my progress on this browser" deletes the current guest's playthroughs immediately.
-- **Claiming** (D-01, D-23): on login/register, guest playthroughs get `user_id` set and `guest_id` cleared in one transaction. If an in-progress conflict hits the account's partial unique index, the less recently active playthrough is marked `abandoned` first (default pending D-23).
+- **Claiming** (D-01, D-23): on login/register, guest playthroughs get `user_id` set and `guest_id` cleared in one transaction. If an in-progress conflict hits the account's partial unique index, the less recently active playthrough is marked `abandoned` first (D-23).
 - Cases are never hard-deleted once published; they move to `retired` (hidden from the library, but still viewable in a player's history).
 - Data export (PRODUCT_SPEC §5.1) serializes the user's playthrough tables to JSON.
 

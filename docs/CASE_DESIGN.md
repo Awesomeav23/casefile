@@ -324,14 +324,15 @@ Scoring per question = answer points (if correct) + proof points (if a `full` se
     all:
       - asked: corinne-blake/her-talk
       - visited: main-hall
+      - asked: sam-pike/guests-phones   # guarantees guest-photo is discovered, so tier 3 may name it
   resolved_when:                        # * when the track stops being offered (goal achieved)
     contradiction: lectern-photo
-  mentions: [corinne-blake/at-lectern, event-programme]   # * every item any tier names (citation shorthand)
+  mentions: [statement:corinne-blake/at-lectern, guest-photo]   # * every item any tier names (citation shorthand)
   tiers:                                # * exactly 3, in order
     - level: nudge                      # where to focus
       text: Corinne was confident about where she was all evening. Is anyone else's view of the Main Hall worth checking?
     - level: pointer                    # which items to consider together
-      text: The valet mentioned that guests were taking photos. Ask him about it, then look at what you find next to Corinne's account of her talk.
+      text: Guests were taking photos all evening. Look at what was captured in the Main Hall next to Corinne's account of her talk.
     - level: direction                  # the exact comparison/action — still no conclusion
       text: Compare Corinne's statement about being at the lectern until ten with the time-stamped guest photo from the Main Hall.
 ```
@@ -419,7 +420,7 @@ Rules:
 
 ### 7.1 Copyright of case content (D-20)
 
-- Application code is MIT-licensed (`LICENSE`). **Case content isn't.** Original narratives, characters, dialogue, evidence text, hints, solutions, and original artwork under `content/cases/` are © the author, all rights reserved, as stated in `content/COPYRIGHT.md`. That changes only if the owner explicitly licenses specific content for reuse.
+- Application code is MIT-licensed (`LICENSE`, added in M0.1). **Case content isn't.** Original narratives, characters, dialogue, evidence text, hints, solutions, and original artwork under `content/cases/` are © the author, all rights reserved, as stated in `content/COPYRIGHT.md`. That changes only if the owner explicitly licenses specific content for reuse.
 - Every case folder carries a short `COPYRIGHT` line in `case.yaml` (`copyright: "© 2026 <author>. All rights reserved."`), shown in the briefing footer and the results page.
 - Third-party assets keep their own licenses, as recorded in `CREDITS.md`.
 - The fixture case (`_fixtures/mini-case`) and `_template` are test scaffolding and are MIT-licensed with the code.
@@ -543,7 +544,7 @@ The repository is public, so `spoilers/` files are readable by anyone who browse
 
 | Track | Offered when | Resolved when |
 |---|---|---|
-| `test-curator-alibi` | asked `corinne-blake/her-talk` + visited `main-hall` | `contradiction: lectern-photo` |
+| `test-curator-alibi` | asked `corinne-blake/her-talk` + visited `main-hall` + asked `sam-pike/guests-phones` | `contradiction: lectern-photo` |
 | `who-touched-the-system` | examined `alarm-log` | `contradiction: override-user` |
 | `where-did-it-go` | examined `alarm-test-email` or `camera-gap` | examined `return-crate` |
 | `why-now` | `contradiction: lectern-photo` | examined `dismissal-draft` |

@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0 complete (repository & tooling).** This repository contains the design documentation and the development tooling (local PostgreSQL, lint hooks, CI lint workflow). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0 and M0.1 (local part) complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI workflow), and licensing. No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -118,8 +118,7 @@ Stop the database with `docker compose stop db`. `docker compose down -v` also d
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env               # set DATABASE_URL, SECRET_KEY
-python manage.py migrate
+python manage.py migrate           # reads the root .env from Setup step 1
 python manage.py validate_case ../content/cases/the-missing-masterpiece
 python manage.py import_case   ../content/cases/the-missing-masterpiece --publish
 python manage.py runserver
@@ -160,10 +159,8 @@ The process needs no new application code unless a case requires a new *mechanic
 
 ## License and content copyright
 
-> **Planned in milestone M0.1.** The license files are not in the repository yet.
-
-- **Application code** (backend, frontend, tests, tooling): **MIT License**, in `LICENSE`.
-- **Case content** (original mystery narratives, characters, dialogue, evidence text, hints, solutions, and original artwork under `content/cases/`): **© the author, all rights reserved**, as set out in `content/COPYRIGHT.md`. It may be read here but not reused or republished without permission, unless specific content is later explicitly licensed for reuse.
+- **Application code** (backend, frontend, tests, tooling) and **technical documentation** (`docs/`): **MIT License**, in [`LICENSE`](LICENSE).
+- **Case content** (original mystery narratives, characters, dialogue, evidence text, hints, solutions, and original artwork under `content/cases/`): **© the author, all rights reserved**, as set out in [`content/COPYRIGHT.md`](content/COPYRIGHT.md). This also covers the case narrative excerpts in `docs/CASE_DESIGN.md` §9–10. It may be read here but not reused or republished without permission, unless specific content is later explicitly licensed for reuse.
 - Third-party images and assets keep their own licenses, listed in each case's `assets/CREDITS.md`.
 
 ## ⚠️ Spoiler warning

@@ -40,7 +40,7 @@ Global: Settings /settings · 404 · error screen
 |---|---|---|
 | `/` | Landing | Public |
 | `/login`, `/register`, `/reset-password` | Auth screens | Public |
-| `/cases` | Case Library | Public (status shown when logged in) |
+| `/cases` | Case Library | Public (status shown for guests and accounts) |
 | `/cases/:slug` | Case Briefing | Public; starting a case needs no account (a guest identity is created) |
 | `/play/:id/overview` (default) | Workspace: Overview | Owner |
 | `/play/:id/locations[/:key]` | Workspace: Locations | Owner |

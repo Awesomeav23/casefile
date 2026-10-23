@@ -169,7 +169,7 @@ All progress saves on the server after every action, for guests and account hold
 |---|---|
 | Accusation form defined per case: ordered questions (suspect choice, multiple choice, evidence citation) | Essential |
 | Evidence slots per claim (e.g. "Prove opportunity: cite up to 2 items") | Essential |
-| **Investigation review** before accusing: confirmed contradictions, active theory, pinned items, and loose ends (discovered but unexamined evidence, unasked topics, unvisited locations), each linking back into the workspace | Essential |
+| **Investigation review** before accusing: confirmed contradictions, active theory, pinned board items, suspicion markers, and loose ends (unexamined evidence, unasked topics, unvisited locations, unconfirmed flags), each linking back into the workspace | Essential |
 | Answer review step and explicit "final" confirmation | Essential |
 | **One final accusation per playthrough** (D-02). Once it's submitted, the investigation closes and the solution is revealed | Essential |
 | Outcome: **Solved** or **Unsolved**, plus rating tier (see §6) | Essential |
@@ -224,7 +224,7 @@ All progress saves on the server after every action, for guests and account hold
 - v1.0 ships with **three complete, distinct mysteries** (D-05). Each has a different crime type, setting, and difficulty, and each includes authored hint tracks:
   1. *The Missing Masterpiece*: art theft, Standard difficulty (worked example in CASE_DESIGN).
   2. A second case with a different crime type (e.g. a disappearance or poisoning), Introductory difficulty, doubling as the tutorial case (D-18).
-  3. A third case, Hard difficulty, with more suspects and two layered contradictions.
+  3. A third case, Hard difficulty, with more suspects and 4–6 contradictions, 2–3 of them layered (CASE_DESIGN §6.1).
 - Cases 2 and 3 are outlined during the roadmap's content milestones. They are not designed in this planning phase.
 - **Ordinary content additions require no application code changes** (D-05). "Ordinary" means a case built from the existing mechanics: people, locations, evidence kinds, topics, reactions, timeline, contradictions, hints, and configurable accusation questions. Only a genuinely new mechanic needs code, through the extension process in ARCHITECTURE §8.
 
@@ -272,12 +272,15 @@ The product owner settles decisions, and other documents cite them by ID. **Deci
 |---|---|---|---|
 | **D-01** | **Guest play is allowed.** Players can investigate any published case without an account. Accounts are optional, and add persistent progress, cross-device access, and completion history. Guest progress is claimed into the account on register or log-in. | 2026-10-23 | Guest identity (ARCHITECTURE §5), nullable `user` on playthroughs (DATA_MODEL §5), "Player" permission (API_PLAN), guest UI states (SCREEN_DESIGN), roadmap M5/M7/M16 |
 | **D-02** | **One final accusation per playthrough.** Players can review their investigation before submitting. Afterwards the solution and explanation are revealed. Players may replay the case as a new playthrough. | 2026-10-23 | Investigation review step (SCREEN_DESIGN §8), unique accusation per playthrough (DATA_MODEL), M14 |
-| **D-03** | **No penalties for incorrect contradiction flags.** Players can revise or remove their flags. Interpretation: incorrect flags persist as *unconfirmed* and are editable/removable; confirmed contradictions are permanent facts (D-24 covers hiding them). | 2026-10-23 | Flags resource (API_PLAN §5.1), `play_contradictionflag` (DATA_MODEL), scoring, results stats, M10 |
+| **D-03** | **No penalties for incorrect contradiction flags.** Players can revise or remove their flags. Interpretation: incorrect flags persist as *unconfirmed* and are editable/removable; confirmed contradictions are permanent facts (D-24 covers hiding them). | 2026-10-23 | Flags resource (API_PLAN §4.2), `play_contradictionflag` (DATA_MODEL), scoring, results stats, M10 |
 | **D-04** | **Optional, tiered hints ship in v1.0.** They guide deduction without immediately revealing the answer. | 2026-10-23 | Hint tracks in case format (CASE_DESIGN §5.10), hint tables and endpoints, new milestone M15, content milestones |
 | **D-05** | **Launch with three complete, distinct mysteries.** The case system supports additional cases without application code changes for ordinary content additions. | 2026-10-23 | §5.14, M17/M18 acceptance criteria |
 | **D-07** | **Render** is the planned deployment platform for the Vue frontend, Django REST API, and PostgreSQL. Current pricing, service availability, and deployment requirements must be **verified before deployment**. No Render pricing or limits are assumed in these docs. | 2026-10-23 | ARCHITECTURE §7, §9; M20 |
-| **D-19** | **Public GitHub repository** for portfolio visibility. Develop locally first; exclude secrets and generated files; provide `.env.example` without real credentials; configure CI before relying on automated checks. | 2026-10-23 | README, ARCHITECTURE §9, roadmap M0/M1 "Publish repository" task |
+| **D-19** | **Public GitHub repository** for portfolio visibility. Develop locally first; exclude secrets and generated files; provide `.env.example` without real credentials; configure CI before relying on automated checks. | 2026-10-23 | README, ARCHITECTURE §9, roadmap M0.1 (licensing & publication prep) |
 | **D-20** | **Licensing:** MIT for application code. Original mystery narratives and case content are under a separate, clearly documented copyright policy (all rights reserved) unless the owner explicitly chooses to license content for reuse. | 2026-10-23 | `LICENSE`, `content/COPYRIGHT.md`, README §License, CASE_DESIGN §7 |
+| **D-23** | **Guest-claim conflict:** if the account already has an in-progress playthrough of a case the guest also has in progress, keep both. The more recently active one stays in progress, the other becomes *abandoned* (still in history), and the player is told which was kept. | 2026-10-23 (default accepted) | `accounts/claim.py`, API `claimed.conflicts`, M7/M16 |
+| **D-25** | **Spoilers in the public repo are accepted for v1.0.** Case solutions under `content/cases/*/spoilers/` stay in the public repository, with prominent spoiler warnings in the README and `content/README.md`. Revisit if it becomes a problem. | 2026-10-23 (default accepted) | README, `content/README.md`, CASE_DESIGN §7.2 |
+| **D-27** | **`docs/` licensing:** technical documentation is MIT. The case narrative excerpts in CASE_DESIGN §9–10 fall under the content copyright policy. | 2026-10-23 (default accepted) | `LICENSE` scope note, `content/COPYRIGHT.md` |
 
 ### 9.2 Open
 
@@ -297,9 +300,6 @@ The product owner settles decisions, and other documents cite them by ID. **Deci
 | **D-18** | Dedicated interactive tutorial, or does the Introductory case teach through contextual tips? | Introductory case plus dismissible contextual tips | M18 |
 | **D-21** | Does hint use affect score or rating tier? (e.g. cap at Convincing if the *direction* tier was used) | No effect on score or tier; hints shown in statistics | M14 |
 | **D-22** | How long is inactive guest data kept? | Guest cookie lasts 90 days; guest playthroughs inactive for 90 days are purged by a scheduled job | M16 |
-| **D-23** | On claiming guest progress, what if the account already has an in-progress playthrough of the same case? | Keep both. The more recently active one stays in progress, the other becomes *abandoned* (still visible in history), and the player is told which was kept | M16 |
 | **D-24** | Can players hide a *confirmed* contradiction from their lists? (Its unlocks always remain.) | No; confirmed contradictions are permanent and always listed | M10 |
-| **D-25** | With a public repository, case solutions in `content/cases/*/spoilers/` are readable by anyone. Accept this, or keep case content in a separate private repository? | Accept for v1.0. Add a clear spoiler warning in the README and in `content/`; revisit if it becomes a problem | M3 (before real case content is committed) |
 | **D-26** | Render topology: one Web Service serving both the API and the built Vue SPA (same origin), or a Render Static Site for Vue plus a Web Service for the API? | One Web Service + Render PostgreSQL (simplest cookie/CSRF story). The split option needs a shared custom domain; see ARCHITECTURE §9 | M20 (verify in an early spike, M1) |
-| **D-27** | Which license covers `docs/`? It contains both technical design and narrative excerpts of a case. | Technical docs under MIT; case narrative excerpts (CASE_DESIGN §9–10) under the content copyright policy | Before first push |
 | **D-28** | When to create the public GitHub repository and push for the first time? | Only when the owner explicitly asks; recommended before M1 so CI runs from the first code milestone | Before M1 |

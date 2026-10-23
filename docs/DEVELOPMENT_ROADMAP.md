@@ -71,16 +71,16 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 
 ## M0.1: Licensing & public-repository preparation
 **Depends on:** M0
-**Decisions:** D-19, D-20 (decided); **D-25, D-27, D-28** (open, defaults below).
+**Decisions:** D-19, D-20, D-25, D-27 (decided); **D-28** (open: push only on the owner's explicit request).
 **Scope:**
 - Add `LICENSE` (MIT, application code).
 - Add `content/COPYRIGHT.md`: original case narratives, characters, dialogue, evidence text, hints, solutions, and original artwork are all rights reserved. Third-party assets follow `CREDITS.md`. Fixtures and `_template` are MIT.
-- README "License" section explaining the split, plus a **spoiler notice** (D-25).
+- README "License" section explaining the split, including the `docs/` license statement (D-27), plus a **spoiler notice** (D-25).
 - `content/README.md` with the spoiler warning and authoring pointer.
-- Full-history secret scan (`gitleaks`). Add a gitleaks step to CI.
+- Full-history secret scan (`gitleaks` v8.30.1 via Docker). Add a `secret-scan` job to CI.
 - **When the owner asks (D-28):** create the public GitHub repository, push, confirm the CI lint job goes green, then enable branch protection requiring CI.
 **Acceptance criteria:**
-- `LICENSE`, `content/COPYRIGHT.md`, and the README license/spoiler sections exist and agree with PRODUCT_SPEC D-20 and CASE_DESIGN §7.1.
+- `LICENSE`, `content/COPYRIGHT.md`, `content/README.md`, and the README license/spoiler sections exist and agree with PRODUCT_SPEC D-20, D-25, D-27 and CASE_DESIGN §7.1–7.2.
 - Secret scan reports no findings. `.env` isn't tracked, and `.env.example` contains no real credentials.
 - After the push: the first CI run on GitHub is green (link recorded). Branch protection is enabled only after that.
 
@@ -107,7 +107,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 ## M3: Case content format, validator & hint schema
 **Depends on:** M1
 **Scope:** YAML schema models (`content/schema.py`) for format v1 (CASE_DESIGN §5, **including `spoilers/hints.yaml` §5.10 and the `copyright` field**); `play/conditions.py` (pure); the **pure discovery-engine core** in `play/engine.py` (facts → discovered set, no database; ARCHITECTURE §3.2); validator: references, defaults, graph simulation, fairness rules F1–F6 and **hint rules F12–F14** (F6 initially limited to engine-level walkthrough), Mermaid graph output; `manage.py validate_case`; fixture `mini-case` (with 2 hint tracks); `content/cases/_template/`; skeleton files for *The Missing Masterpiece* (enough to validate).
-**Decide during milestone:** empty `any` semantics; whether Markdown subset is validated at import. **D-25** must be settled before real case content is committed.
+**Decide during milestone:** empty `any` semantics; whether Markdown subset is validated at import. (D-25 is decided: spoilers may be committed to the public repo, with warnings.)
 **Acceptance criteria:**
 - Validator unit tests for every rule in TESTING_PLAN §2.5 pass, including hint and copyright rules.
 - `mini-case` validates clean; each deliberately broken fixture fails with a readable error that names the file and key.
@@ -141,7 +141,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 
 ## M7: Playthroughs, discovery engine, actions & guest claiming
 **Depends on:** M4, M5
-**Decisions:** D-01 (decided); **D-23** (open; default conflict rule implemented); D-22 (open; default purge period).
+**Decisions:** D-01, D-23 (decided); D-22 (open; default purge period).
 **Scope:** play models (Playthrough with `user_id` **or** `guest_id`, `is_preview`; Event, Fact, Discovery) and both partial unique indexes; the engine's persistence wrapper around the M3 core; `actions.py`, `visibility.py`; endpoints: start/resume/restart, list, summary, casefile, actions, seen, heartbeat, abandon, `DELETE /me/guest/`; **`accounts/claim.py`**: claim on register/login by reassigning playthrough ownership (all child data follows), with the D-23 rule and the `claimed` response payload; **`purge_guest_data`** command; per-IP throttle on guest starts; row-level locking; read-only Django admin for playthroughs; staff preview + reveal-all; **spoiler-leak test harness** (TESTING_PLAN §5) running against `mini-case` as guest and as account holder.
 **Acceptance criteria:**
 - Engine/action unit tests (TESTING_PLAN §2.2–2.3) and guest/claim tests (§2.3c) pass.
@@ -162,6 +162,8 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 **Scope:** workspace shell (rail with new counters, top bar incl. Hint button slot, notebook drawer placeholder, search palette, discovery toasts + live region, guest banner placeholder); Overview (feed, leads, objective); Locations; Evidence list + viewer with all `kind` renderers (PaperDocument, RecordView, PhotoViewer, transcript); `useAction`; `seen` batching; heartbeat; staff preview UI (Draft ribbon in library, "Reveal all" and "Show unlock reasons" toolbar; SCREEN_DESIGN §12).
 **Acceptance criteria:**
 - Visiting/examining in the UI produces the same discoveries as the API tests.
+- Search palette finds only discovered items; discovery feed lists actions with their discoveries; "new" badges clear via `seen` and stay cleared after reload (component + E2E checks).
+- Staff preview: "Reveal all" discovers everything in a preview playthrough only, and "Show unlock reasons" displays each item's `requires`. Non-staff never see either (API + UI tests).
 - Component tests for each evidence renderer.
 - Keyboard operable; axe clean on these screens.
 
@@ -173,6 +175,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 - Flag unit/API tests (TESTING_PLAN §2.3a) pass, including "no incorrect-flag count in any player payload".
 - `contradiction.spec` E2E passes on `mini-case`.
 - Re-asking doesn't duplicate log entries; default reactions are marked.
+- Suspicion markers persist per playthrough, appear on person cards, and never affect any server response other than the marker itself.
 - Board spike outcome recorded in ARCHITECTURE §4.4.
 
 ## M11: Timeline
@@ -201,11 +204,12 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 ## M14: Investigation review, single accusation, scoring & results
 **Depends on:** M7 (backend), M13 (prefill), M10 (citations of contradictions)
 **Decisions:** **D-02** (decided: one final accusation; review first; reveal afterwards; replay allowed); D-15, D-21 (open; default: neither time nor hints affect score).
-**Scope:** `scoring.py`, `results.py`; accusation-form, accusation, results endpoints (unique accusation per playthrough); **Investigation review** step (built from the casefile: confirmed contradictions, active theory, loose ends incl. unconfirmed flags); accusation flow UI (steps, citation picker, answer review, confirm with one-attempt copy); results screen with reveal sequence, breakdown, narrative, red herrings, contradictions, missed evidence, stats (no incorrect-flag count); **Replay** from results; redirect rules.
+**Scope:** `scoring.py`, `results.py`; **prefill from a theory** ("Use for accusation" / "Start from this theory"); accusation-form, accusation, results endpoints (unique accusation per playthrough); **Investigation review** step (built from the casefile: confirmed contradictions, active theory, loose ends incl. unconfirmed flags); accusation flow UI (steps, citation picker, answer review, confirm with one-attempt copy); results screen with reveal sequence, breakdown, narrative, red herrings, contradictions, missed evidence, stats (no incorrect-flag count); **Replay** from results; redirect rules.
 **Acceptance criteria:**
 - Scoring unit tests (TESTING_PLAN §2.4) and accusation API tests pass, including second-submission refusal and post-accusation 409s for actions/flags.
 - Results frozen at submission (test edits content after accusation → results unchanged).
 - Replay creates a new playthrough; the earlier result stays reachable.
+- Starting the accusation from a theory prefills the suspect and citations, and the player can still change everything before confirming.
 - `mini-case` golden path (as guest) and wrong-accusation E2E pass.
 - Spoiler-leak suite still passes (results only after accusation).
 
@@ -221,11 +225,12 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 
 ## M16: Progress, settings, accounts & guest experience
 **Depends on:** M14, M15
-**Decisions:** D-01 (decided); D-22, D-23 (open; defaults).
+**Decisions:** D-01, D-23 (decided); D-22 (open; default).
 **Scope:** `/me/progress/` for guests and accounts; Progress screen (completion history, in-progress, totals; guest variant with save prompt and retention note); Settings (text size, reduced motion, tips; account section: password change, data export, account deletion with cascade; guest section: forget my progress); guest banner, save prompts (workspace, results), claim notice after login/register; scheduling plan for `purge_guest_data` (local run documented; Render Cron Job set up in M20).
 **Acceptance criteria:**
 - `progress.spec`, `guest.spec` (incl. cross-device check after claim), and `guest-conflict.spec` E2E pass.
 - Account deletion test confirms all player data removed, content intact.
+- `/me/export/` returns all of the user's playthrough data (events, discoveries, flags, hint reveals, notes, board, theories, accusations) as JSON.
 - Preferences apply app-wide for guests (localStorage) and accounts (profile).
 - No prompt blocks play (manual review against SCREEN_DESIGN §2).
 
