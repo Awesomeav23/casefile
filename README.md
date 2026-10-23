@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0, M0.1, and M1 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, and the Django backend foundation (custom user model, error envelope, health and schema endpoints). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0–M2 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), and the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -43,12 +43,12 @@ Essential (v1.0) and optional features are listed in full in [`docs/PRODUCT_SPEC
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vue 3 (Composition API, `<script setup>`), TypeScript, Vite, Vue Router, Pinia |
+| Frontend | Vue 3.5 (Composition API, `<script setup>`), TypeScript 6, Vite 8, Vue Router 5, Pinia 4 |
 | Backend | Python 3.13, Django 5.2 LTS, Django REST Framework 3.18 |
 | Database | PostgreSQL |
 | API schema | OpenAPI generated with drf-spectacular; TypeScript types generated from it |
 | Testing | pytest + pytest-django (backend), Vitest + Vue Test Utils (frontend), Playwright (end-to-end) |
-| CI | GitHub Actions: secret scan (gitleaks), lint, and backend checks/tests against PostgreSQL 16 |
+| CI | GitHub Actions: secret scan (gitleaks), lint, backend checks/tests against PostgreSQL 16, frontend lint/type-check/tests/build, API-type drift check |
 | Hosting (planned) | Render: Web Service (Django + built Vue SPA) and Render PostgreSQL. Pricing and requirements to be verified before deployment |
 
 Rationale is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -60,7 +60,7 @@ Pinned in M0:
 | Tool | Version | Pinned in |
 |---|---|---|
 | Python | 3.13 | `.python-version` |
-| Node.js | 22 LTS (with npm) | `.nvmrc` |
+| Node.js | 24 LTS (with npm 11) | `.nvmrc` |
 | PostgreSQL | 16 | `docker-compose.yml` (`postgres:16`) |
 | Docker + Docker Compose | any recent | runs the local database |
 | Git | any recent | |
@@ -78,7 +78,7 @@ casefile/
 │   ├── accounts/            #   users and player profiles
 │   ├── content/             #   case content models, importer, validator
 │   └── play/                #   playthroughs, discovery engine, actions, theories, accusations
-├── frontend/                # Vue 3 + TypeScript app (planned)
+├── frontend/                # Vue 3 + TypeScript app
 │   └── src/
 ├── content/
 │   └── cases/               # One folder per mystery (YAML + assets)
@@ -111,8 +111,8 @@ cd backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python manage.py migrate
-.venv/bin/python manage.py runserver                  # http://localhost:8000
-curl localhost:8000/api/v1/health/                    # → {"status":"ok","database":"ok"}
+.venv/bin/python manage.py runserver 8010             # http://localhost:8010
+curl localhost:8010/api/v1/health/                    # → {"status":"ok","database":"ok"}
 # OpenAPI schema: /api/v1/schema/   Interactive docs (DEBUG only): /api/v1/docs/
 .venv/bin/python manage.py createsuperuser            # optional: Django admin at /admin/
 
@@ -122,11 +122,24 @@ curl localhost:8000/api/v1/health/                    # → {"status":"ok","data
 .venv/bin/pytest
 ```
 
+```bash
+# 6. Frontend (Vue 3 + Vite), with Django running on 8010 (step 4)
+cd frontend
+npm install
+npm run dev                  # http://localhost:5180 (proxies /api, /admin, /static to :8010)
+
+# 7. Frontend checks (the same ones CI runs)
+npm run lint:check && npm run format:check && npm run type-check && npm test && npm run build-only
+npm run api:types            # regenerate src/api/schema.d.ts after backend API changes
+```
+
+**Ports:** Casefile uses fixed dev ports (**Django 8010, Vite 5180, PostgreSQL 5436**), because the usual defaults (8000, 5173, 5432) are taken by other local projects. Vite uses `strictPort`, so a clash fails loudly instead of silently serving a different app.
+
 Stop the database with `docker compose stop db`. `docker compose down -v` also deletes its data volume.
 
 ### Planned (later milestones)
 
-> These steps describe the **intended** workflow. They don't work yet: the frontend arrives in M2, and the case commands in M3/M4.
+> These steps describe the **intended** workflow. They don't work yet: the case commands arrive in M3/M4 and Playwright in M7+.
 
 ```bash
 # Cases (backend venv from step 4)
@@ -134,13 +147,7 @@ cd backend
 python manage.py validate_case ../content/cases/the-missing-masterpiece
 python manage.py import_case   ../content/cases/the-missing-masterpiece --publish
 
-# Frontend
-cd frontend
-npm install
-npm run dev                        # Vite dev server proxies /api to Django
-
-# Tests
-cd frontend && npm run test
+# End-to-end tests
 npx playwright test                # from repo root, with both servers running
 ```
 

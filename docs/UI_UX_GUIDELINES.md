@@ -36,6 +36,19 @@ Defined as CSS custom properties in `styles/tokens.css`. The dark theme is the d
 | `--claimed-400` | `#8FA3C7` | Claimed timeline events (always paired with dashed style) |
 | `--cork-500` | `#7A5A3C` | Evidence board background (with texture) |
 
+Additional token (added in M2 after the contrast check):
+
+| Token | Value | Use |
+|---|---|---|
+| `--ink-400` | `#707684` | Required UI boundaries on ink: input and secondary-button borders (≥ 3:1 on ink-900/800/700) |
+
+**Verified contrast (M2, `src/styles/__tests__/contrast.spec.ts`)**: fog-100 on ink-900 16.27:1 · fog-300 on ink-700 9.30:1 · paper-ink on paper-200 11.32:1 · paper-ink-muted on paper-100 6.36:1 · ink-900 on brass-400 8.26:1 · brass-400 on ink-800 7.58:1 · verified-500 on ink-900 5.74:1 · claimed-400 on ink-900 7.28:1 · brass-600 on paper-100 3.32:1 · tag-red-500 on ink-900 3.87:1 · fog-100 on tag-red-500 4.21:1 · ink-600 on ink-900 1.54:1.
+
+Consequences:
+- `tag-red-500` is for icons, borders, and large text only, never small text. **Danger buttons and badges are outline style** (light text on dark, red border), because light text on a red fill is only 4.21:1.
+- `brass-600` marks UI boundaries on paper (focus rings) and isn't used for text.
+- `ink-600` is for decorative dividers only. Required boundaries use `--ink-400`.
+
 Rules:
 - Text contrast: ≥ 4.5:1 for body text and ≥ 3:1 for large text and UI boundaries (WCAG 2.2 AA). Every pairing above is to be verified with a contrast checker in M2. Any that fail are adjusted, not excepted.
 - **Color is never the only signal**: claimed vs. verified also differ by dashed vs. solid outline and an icon; correct and incorrect states also differ by icon and text.

@@ -176,8 +176,14 @@ Parametrised over every folder in `content/cases/` except those whose names star
 - Results: renders solved/unsolved variants; reduced-motion skips animation.
 - Route guards: accused → results redirect; guests can reach every play route; only the account settings section requires login.
 
+### 7.2a Implemented in M2
+- **Token contrast** (`src/styles/__tests__/contrast.spec.ts`): every colour pairing in use is checked against WCAG AA (4.5:1 text, 3:1 UI).
+- **Accessibility helper** (`src/test/a11y.ts`): axe-core on mounted components. The `color-contrast` rule is off in jsdom (covered by the token test). A self-test proves the helper reports real violations.
+- **Primitives**: behaviour plus axe tests for all 9 `Ui*` components. **Routes**: every screen renders, titles set, 404, skip link, no route requires an account, and axe on the app shell.
+- **API client**: CSRF header on unsafe methods only, envelope → `ApiError`, non-envelope errors, network errors, 204, and the 401 hook.
+
 ### 7.3 Type checking & lint
-`vue-tsc --noEmit`, ESLint, and Prettier in CI. Generated API types must compile against the current schema.
+`vue-tsc --build`, oxlint + ESLint, and Prettier in CI (and as pre-commit hooks). Generated API types must compile against the current schema.
 
 ## 8. End-to-end tests (Playwright)
 

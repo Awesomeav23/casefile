@@ -1,5 +1,5 @@
 # Run `pre-commit install` once after creating the dev venv.
-# Frontend hooks (eslint, prettier) are added in M2 when the Vue project exists.
+# Frontend hooks need `npm install` in frontend/ first. CI runs them in the frontend job.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -19,3 +19,18 @@ repos:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: frontend lint (oxlint + eslint)
+        entry: npm --prefix frontend run lint:check --silent
+        language: system
+        files: ^frontend/.*\.(ts|vue|js|mjs)$
+        pass_filenames: false
+      - id: frontend-format
+        name: frontend format (prettier)
+        entry: npm --prefix frontend run format:check --silent
+        language: system
+        files: ^frontend/src/
+        pass_filenames: false

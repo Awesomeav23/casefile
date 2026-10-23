@@ -34,7 +34,7 @@ Guiding constraint: **one developer must be able to build, understand, and opera
 ```
 
 - **Single origin in production**: the built SPA and `/api/` are served from the same origin (Django + WhiteNoise serving the Vue build). This avoids CORS and keeps cookie sessions and CSRF simple, for guests and account holders alike.
-- **In development**, the Vite dev server proxies `/api` and `/static` to `runserver`.
+- **In development**, the Vite dev server (port 5180) proxies `/api`, `/admin`, and `/static` to `runserver` (port 8010).
 
 ## 2. Key technical decisions
 
@@ -131,7 +131,7 @@ frontend/src/
 ├── router/         # routes, guards (playthrough ownership via API 404)
 ├── views/          # one per route (Landing, Library, Briefing, Workspace/*, Results, Progress, Auth, Settings)
 ├── components/
-│   ├── ui/         # design-system primitives: Button, Card, Dialog, Tabs, Badge, Toast, Tooltip, EmptyState…
+│   ├── ui/         # design-system primitives (M2): UiButton, UiIconButton, UiCard, UiDialog (+sheet), UiTabs, UiBadge, UiToastRegion, UiSkeleton, UiEmptyState
 │   ├── casefile/   # EvidenceCard, EvidenceViewer, PersonCard, StatementQuote, RecordView, DiscoveryToast…
 │   ├── interview/  # TopicList, ConversationLog, PresentEvidencePicker
 │   ├── contradictions/ # FlagDialog, MyFlagsList, ConfirmedContradictionCard
@@ -141,7 +141,8 @@ frontend/src/
 │   ├── accusation/ # InvestigationReview, QuestionStep, CitationPicker, ReviewSummary
 │   └── account/    # GuestBanner, SaveProgressPrompt, ClaimResultNotice
 ├── composables/    # useAction, useNewBadges, useKeyboardShortcuts, useReducedMotion…
-├── i18n/           # externalised UI strings (single messages module from M2)
+├── i18n/           # externalised UI strings: en.ts, exposed as `m` (M2)
+├── test/           # Vitest setup + axe helper (src/test/a11y.ts)
 └── styles/         # tokens.css, base.css, themes
 ```
 
@@ -254,7 +255,7 @@ Each requires a format-version bump and tests. This is the **only** case where n
 
 | Env | Notes |
 |---|---|
-| Local | Docker Compose PostgreSQL 16 on port 5436, `runserver`, Vite dev server |
+| Local | Docker Compose PostgreSQL 16 on port 5436, `runserver 8010`, Vite dev server on 5180 (proxies `/api`, `/admin`, `/static`) |
 | CI | GitHub Actions: PostgreSQL service container; lint, type-check, unit/integration tests, `validate_case` on all cases, Playwright. Active only once the public repo exists (D-19, D-28) |
 | Staging / Production | Render (D-07); topology below. Whether a separate staging service is affordable is part of the pre-deployment verification |
 
@@ -284,7 +285,7 @@ Configuration comes from environment variables (`DATABASE_URL`, `SECRET_KEY`, `A
 **Must verify before deployment (M20)**. Nothing here is assumed:
 - current pricing and free-tier limits for Web Services, PostgreSQL, and Cron Jobs (including any database expiry or sleep-on-idle behaviour);
 - whether a pre-deploy/release command is available on the chosen instance type (if not, run `migrate`/`import_case` at the start of the start command, guarded by a lock);
-- the supported Python and Node versions in Render's build environment (pinned: Python 3.13, Node 22);
+- the supported Python and Node versions in Render's build environment (pinned: Python 3.13, Node 24 LTS);
 - PostgreSQL major-version availability (pinned locally: 16);
 - backup and point-in-time-restore options for the chosen database plan;
 - custom domain + managed TLS setup; region availability;

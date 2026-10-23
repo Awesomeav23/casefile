@@ -25,6 +25,9 @@ jobs:
       - name: Install dev tooling
         run: pip install -r requirements-dev.txt
       - name: Run pre-commit hooks
+        # Frontend hooks need node_modules; the frontend job runs the same checks.
+        env:
+          SKIP: frontend-lint,frontend-format
         run: pre-commit run --all-files --show-diff-on-failure
 
   backend:
@@ -68,4 +71,57 @@ jobs:
       - name: Tests
         run: pytest
 
-  # Frontend tests and e2e jobs are added in M2 and M7+.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint:check
+      - name: Format
+        run: npm run format:check
+      - name: Type-check
+        run: npm run type-check
+      - name: Unit and component tests (incl. axe and token contrast)
+        run: npm test
+      - name: Build
+        run: npm run build-only
+
+  api-contract:
+    # The committed TypeScript API types must match the schema Django generates.
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://unused:unused@localhost:5432/unused
+      SECRET_KEY: ci-only-not-a-real-secret
+      PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: |
+          pip install -r backend/requirements.txt
+          npm ci --prefix frontend
+      - name: Regenerate API types
+        run: npm --prefix frontend run api:types
+      - name: Types are up to date
+        run: git diff --exit-code -- frontend/src/api/schema.d.ts
+
+  # E2E (Playwright) jobs are added from M7 onward.

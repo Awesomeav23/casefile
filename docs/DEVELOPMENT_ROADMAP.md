@@ -1,6 +1,6 @@
 # Casefile: Development Roadmap
 
-**Status:** M0, M0.1, and M1 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
+**Status:** M0–M2 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
 **Related:** every other document. Feature tags (Essential/Optional) come from [PRODUCT_SPEC](PRODUCT_SPEC.md). Decisions `D-xx` (decided and open) are listed in [PRODUCT_SPEC §9](PRODUCT_SPEC.md#9-decisions).
 
 The product vision (PRODUCT_SPEC) describes **everything Casefile should become**. This roadmap describes **the order in which to build it**. Milestones **M0–M20** make up v1.0: all Essential features (including guest play and hints), three complete cases, and deployment on Render. M21+ are post-1.0 Optional enhancements.
@@ -61,7 +61,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 
 ## M0: Repository & tooling setup ✓ (completed 2026-10-23)
 **Depends on:** nothing
-**Delivered:** folder layout; pinned Python 3.13 / Node 22; `.gitignore`, `.editorconfig`, `.env.example` (placeholders only); Docker Compose PostgreSQL 16 on port 5436; pre-commit (hygiene hooks + ruff); GitHub Actions lint workflow; first local commit.
+**Delivered:** folder layout; pinned Python 3.13 / Node 22 (moved to 24 LTS in M2); `.gitignore`, `.editorconfig`, `.env.example` (placeholders only); Docker Compose PostgreSQL 16 on port 5436; pre-commit (hygiene hooks + ruff); GitHub Actions lint workflow; first local commit.
 **Acceptance criteria:**
 - ✓ A fresh clone + documented commands starts PostgreSQL locally (verified: container healthy, `select version()` returns 16.x).
 - ✓ Lint passes locally (`pre-commit run --all-files`).
@@ -89,7 +89,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 ## M1: Backend foundation ✓ (completed 2026-10-23)
 **Depends on:** M0 (M0.1 recommended first so CI covers this milestone)
 **Scope:** Django project `casefile` with apps `accounts`, `content`, `play`; **custom user model** (email login); settings via environment (incl. `CSRF_TRUSTED_ORIGINS`); DRF configured (session auth, JSON only, custom exception handler with the error envelope); drf-spectacular schema endpoint; `/api/v1/health/`; pytest-django against PostgreSQL (local and CI).
-**Optional spike (no paid resources without owner approval):** check Render's documented build environment against our pins (Python 3.13, Node 22, PostgreSQL 16) and pre-deploy command availability, as input to D-26.
+**Optional spike (no paid resources without owner approval):** check Render's documented build environment against our pins (Python 3.13, Node 24, PostgreSQL 16) and pre-deploy command availability, as input to D-26.
 **Acceptance criteria:**
 - `migrate` from zero succeeds; `makemigrations --check` clean.
 - `GET /api/v1/health/` returns 200 and DB status.
@@ -100,7 +100,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 **Delivered:** Django 5.2.18 LTS (security support to April 2028; move to 6.2 LTS when it ships), DRF 3.18.3, drf-spectacular 0.30.0, psycopg 3.3.6, argon2 hashing; `accounts.User` (email login, case-insensitive unique email via a `Lower(email)` constraint, email-based admin forms); env-driven settings (`SECRET_KEY` required; secure cookies unless `DEBUG`); DRF JSON-only, session auth, deny-by-default permissions; error envelope handler; `/api/v1/health/`, `/api/v1/schema/`, `/api/v1/docs/` (DEBUG only); 25 pytest tests run locally and in CI. `check --deploy` hardening (HSTS, SSL redirect) is deferred to M20.
 Optional Render spike: not done (no Render resources created).
 
-## M2: Frontend foundation & design tokens
+## M2: Frontend foundation & design tokens ✓ (completed 2026-10-23)
 **Depends on:** M0
 **Scope:** Vite + Vue 3 + TS + Vue Router + Pinia; `tokens.css` and base styles from UI_UX_GUIDELINES; fonts; primitives (Button, IconButton, Card, Dialog/Sheet, Tabs, Badge, Toast, Skeleton, EmptyState); route skeleton for every screen in SCREEN_DESIGN §1 (placeholder views); UI strings externalised into a single messages module from the start (enables localisation later, M29); API client (`client.ts`) with CSRF + error mapping; Vite proxy to Django; Vitest + ESLint + Prettier + `vue-tsc` (added to pre-commit and CI); `api:types` script.
 **Acceptance criteria:**
@@ -108,6 +108,15 @@ Optional Render spike: not done (no Render resources created).
 - Primitives have component tests and pass axe checks in Vitest/jsdom where applicable.
 - Token colour pairings verified for AA contrast. Any failures are adjusted and documented.
 - `npm run api:types` generates types from the M1 schema and the project compiles.
+
+**Delivered:** Vue 3.5, TypeScript 6, Vite 8, Vue Router 5, Pinia 4, Vitest 4 (create-vue 3.24 scaffold); self-hosted fonts (@fontsource); `tokens.css` + `base.css`; 9 primitives with behaviour tests and axe checks (plus a test proving the axe helper catches violations); placeholder views for all 21 screen routes, a 404, and a test that no route requires an account; `en.ts` message module; typed API client (CSRF header, error-envelope → `ApiError`, 401 hook, network errors); `api:types` via openapi-typescript (npm `overrides` lets it use TypeScript 6; its peer range only lists TS 5); CI `frontend` and `api-contract` jobs; 102 frontend tests.
+**Changes made during M2:**
+- **Node pin moved from 22 to 24 LTS.** The toolchain targets Node 24, Node 22 is in maintenance, and npm 10.9 (bundled with Node 22/23) has a peer-resolution bug that npm 11 fixes.
+- **Contrast check results:**
+  - Light text on `tag-red-500` is 4.21:1, so danger buttons and badges are outline style.
+  - `ink-600` borders are 1.54:1, so `--ink-400` (`#707684`, ≥ 3:1) was added for input borders.
+  - `brass-600` and `tag-red-500` are restricted to UI boundaries and large text (UI_UX_GUIDELINES §2).
+- **Fixed dev ports:** Django 8010 and Vite 5180, because 8000 and 5173 clash with other local projects.
 
 ## M3: Case content format, validator & hint schema
 **Depends on:** M1
