@@ -281,6 +281,7 @@ The product owner settles decisions, and other documents cite them by ID. **Deci
 | **D-23** | **Guest-claim conflict:** if the account already has an in-progress playthrough of a case the guest also has in progress, keep both. The more recently active one stays in progress, the other becomes *abandoned* (still in history), and the player is told which was kept. | 2026-10-23 (default accepted) | `accounts/claim.py`, API `claimed.conflicts`, M7/M16 |
 | **D-25** | **Spoilers in the public repo are accepted for v1.0.** Case solutions under `content/cases/*/spoilers/` stay in the public repository, with prominent spoiler warnings in the README and `content/README.md`. Revisit if it becomes a problem. | 2026-10-23 (default accepted) | README, `content/README.md`, CASE_DESIGN §7.2 |
 | **D-27** | **`docs/` licensing:** technical documentation is MIT. The case narrative excerpts in CASE_DESIGN §9–10 fall under the content copyright policy. | 2026-10-23 (default accepted) | `LICENSE` scope note, `content/COPYRIGHT.md` |
+| **D-28** | **Repository published** on 2026-10-23 at https://github.com/Awesomeav23/casefile, before M1, so CI covers every code milestone. | 2026-10-23 | M0.1 ✓ |
 
 ### 9.2 Open
 
@@ -302,4 +303,3 @@ The product owner settles decisions, and other documents cite them by ID. **Deci
 | **D-22** | How long is inactive guest data kept? | Guest cookie lasts 90 days; guest playthroughs inactive for 90 days are purged by a scheduled job | M16 |
 | **D-24** | Can players hide a *confirmed* contradiction from their lists? (Its unlocks always remain.) | No; confirmed contradictions are permanent and always listed | M10 |
 | **D-26** | Render topology: one Web Service serving both the API and the built Vue SPA (same origin), or a Render Static Site for Vue plus a Web Service for the API? | One Web Service + Render PostgreSQL (simplest cookie/CSRF story). The split option needs a shared custom domain; see ARCHITECTURE §9 | M20 (verify in an early spike, M1) |
-| **D-28** | When to create the public GitHub repository and push for the first time? | Only when the owner explicitly asks; recommended before M1 so CI runs from the first code milestone | Before M1 |

@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0 and M0.1 (local part) complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI workflow), and licensing. No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0 and M0.1 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI workflow), and licensing. No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -48,7 +48,7 @@ Essential (v1.0) and optional features are listed in full in [`docs/PRODUCT_SPEC
 | Database | PostgreSQL |
 | API schema | OpenAPI generated with drf-spectacular; TypeScript types generated from it |
 | Testing | pytest + pytest-django (backend), Vitest + Vue Test Utils (frontend), Playwright (end-to-end) |
-| CI | GitHub Actions (lint workflow configured; runs once the public repo is pushed) |
+| CI | GitHub Actions: secret scan (gitleaks) + lint, required on `main` |
 | Hosting (planned) | Render: Web Service (Django + built Vue SPA) and Render PostgreSQL. Pricing and requirements to be verified before deployment |
 
 Rationale is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

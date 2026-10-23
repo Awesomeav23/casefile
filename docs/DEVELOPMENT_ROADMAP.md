@@ -1,6 +1,6 @@
 # Casefile: Development Roadmap
 
-**Status:** M0 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
+**Status:** M0 and M0.1 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
 **Related:** every other document. Feature tags (Essential/Optional) come from [PRODUCT_SPEC](PRODUCT_SPEC.md). Decisions `D-xx` (decided and open) are listed in [PRODUCT_SPEC §9](PRODUCT_SPEC.md#9-decisions).
 
 The product vision (PRODUCT_SPEC) describes **everything Casefile should become**. This roadmap describes **the order in which to build it**. Milestones **M0–M20** make up v1.0: all Essential features (including guest play and hints), three complete cases, and deployment on Render. M21+ are post-1.0 Optional enhancements.
@@ -12,7 +12,7 @@ Each milestone is sized for one developer at roughly 2–8 working days. Each on
 ## Dependency overview
 
 ```
-M0 Repo ✓ ─► M0.1 Licensing & publication prep (push only when the owner asks)
+M0 Repo ✓ ─► M0.1 Licensing & public repo ✓
    │
    ├─► M1 Backend base ─► M3 Content format+validator+hints schema ─► M4 Importer ─► M6 Library API
    │        │                                                            │
@@ -66,12 +66,12 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 - ✓ A fresh clone + documented commands starts PostgreSQL locally (verified: container healthy, `select version()` returns 16.x).
 - ✓ Lint passes locally (`pre-commit run --all-files`).
 - ✓ README setup section contains only verified commands for this stage.
-- ⏳ CI workflow is configured but **has not run yet**, because there's no GitHub remote. It's verified in M0.1.
+- ✓ CI workflow verified on GitHub in M0.1 (first run green).
 - Note: eslint/prettier hooks were deferred to M2, when the frontend exists.
 
-## M0.1: Licensing & public-repository preparation
+## M0.1: Licensing & public-repository preparation ✓ (completed 2026-10-23)
 **Depends on:** M0
-**Decisions:** D-19, D-20, D-25, D-27 (decided); **D-28** (open: push only on the owner's explicit request).
+**Decisions:** D-19, D-20, D-25, D-27, D-28 (decided; the owner approved the push on 2026-10-23).
 **Scope:**
 - Add `LICENSE` (MIT, application code).
 - Add `content/COPYRIGHT.md`: original case narratives, characters, dialogue, evidence text, hints, solutions, and original artwork are all rights reserved. Third-party assets follow `CREDITS.md`. Fixtures and `_template` are MIT.
@@ -82,7 +82,9 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 **Acceptance criteria:**
 - `LICENSE`, `content/COPYRIGHT.md`, `content/README.md`, and the README license/spoiler sections exist and agree with PRODUCT_SPEC D-20, D-25, D-27 and CASE_DESIGN §7.1–7.2.
 - Secret scan reports no findings. `.env` isn't tracked, and `.env.example` contains no real credentials.
-- After the push: the first CI run on GitHub is green (link recorded). Branch protection is enabled only after that.
+- ✓ Repo: https://github.com/Awesomeav23/casefile (public). First CI run green: https://github.com/Awesomeav23/casefile/actions/runs/40008827214 (`secret-scan` + `lint`).
+- ✓ Branch protection on `main`: requires `secret-scan` and `lint`; force pushes and deletion blocked; admin enforcement off for solo development.
+- ✓ Secret scan (gitleaks v8.30.1): no leaks in history or working tree.
 
 ## M1: Backend foundation
 **Depends on:** M0 (M0.1 recommended first so CI covers this milestone)
