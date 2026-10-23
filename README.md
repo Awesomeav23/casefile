@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0 and M0.1 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI workflow), and licensing. No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0, M0.1, and M1 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, and the Django backend foundation (custom user model, error envelope, health and schema endpoints). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -44,11 +44,11 @@ Essential (v1.0) and optional features are listed in full in [`docs/PRODUCT_SPEC
 | Layer | Technology |
 |---|---|
 | Frontend | Vue 3 (Composition API, `<script setup>`), TypeScript, Vite, Vue Router, Pinia |
-| Backend | Python, Django, Django REST Framework |
+| Backend | Python 3.13, Django 5.2 LTS, Django REST Framework 3.18 |
 | Database | PostgreSQL |
 | API schema | OpenAPI generated with drf-spectacular; TypeScript types generated from it |
 | Testing | pytest + pytest-django (backend), Vitest + Vue Test Utils (frontend), Playwright (end-to-end) |
-| CI | GitHub Actions: secret scan (gitleaks) + lint, required on `main` |
+| CI | GitHub Actions: secret scan (gitleaks), lint, and backend checks/tests against PostgreSQL 16 |
 | Hosting (planned) | Render: Web Service (Django + built Vue SPA) and Render PostgreSQL. Pricing and requirements to be verified before deployment |
 
 Rationale is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -88,9 +88,9 @@ casefile/
 
 ## Setup
 
-### Working now (M0: repository & tooling)
+### Working now (M0 tooling + M1 backend foundation)
 
-These commands were run and verified during M0:
+These commands were run and verified during M0 and M1:
 
 ```bash
 # 1. Environment file
@@ -105,23 +105,34 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/pre-commit install
 .venv/bin/pre-commit run --all-files
+
+# 4. Backend (Django 5.2 LTS + DRF); reads the root .env
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver                  # http://localhost:8000
+curl localhost:8000/api/v1/health/                    # → {"status":"ok","database":"ok"}
+# OpenAPI schema: /api/v1/schema/   Interactive docs (DEBUG only): /api/v1/docs/
+.venv/bin/python manage.py createsuperuser            # optional: Django admin at /admin/
+
+# 5. Backend checks (the same ones CI runs)
+.venv/bin/python manage.py makemigrations --check --dry-run
+.venv/bin/python manage.py spectacular --validate --fail-on-warn --file /dev/null
+.venv/bin/pytest
 ```
 
 Stop the database with `docker compose stop db`. `docker compose down -v` also deletes its data volume.
 
 ### Planned (later milestones)
 
-> These steps describe the **intended** workflow. They don't work yet, because the backend arrives in M1, the frontend in M2, and cases from M3/M4.
+> These steps describe the **intended** workflow. They don't work yet: the frontend arrives in M2, and the case commands in M3/M4.
 
 ```bash
-# Backend
+# Cases (backend venv from step 4)
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate           # reads the root .env from Setup step 1
 python manage.py validate_case ../content/cases/the-missing-masterpiece
 python manage.py import_case   ../content/cases/the-missing-masterpiece --publish
-python manage.py runserver
 
 # Frontend
 cd frontend
@@ -129,7 +140,6 @@ npm install
 npm run dev                        # Vite dev server proxies /api to Django
 
 # Tests
-cd backend && pytest
 cd frontend && npm run test
 npx playwright test                # from repo root, with both servers running
 ```

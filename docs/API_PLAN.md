@@ -389,7 +389,13 @@ After accusation, results may include totals and undiscovered content (it's the 
 
 ## 9. Error codes
 
-`validation_error`, `invalid_credentials`, `not_authenticated`, `csrf_failed`, `permission_denied`, `not_found`, `rate_limited`, `playthrough_not_in_progress`, `action_unavailable`, `invalid_reference`, `version_conflict`, `flag_exists`, `flag_locked`, `no_hint_available`, `confirmation_required`, `accusation_already_submitted`, `results_unavailable`, `case_not_available`, `server_error`.
+`validation_error`, `malformed_request`, `invalid_credentials`, `not_authenticated`, `csrf_failed`, `permission_denied`, `not_found`, `method_not_allowed`, `not_acceptable`, `unsupported_media_type`, `rate_limited`, `service_unavailable`, `playthrough_not_in_progress`, `action_unavailable`, `invalid_reference`, `version_conflict`, `flag_exists`, `flag_locked`, `no_hint_available`, `confirmation_required`, `accusation_already_submitted`, `results_unavailable`, `case_not_available`, `server_error`.
+
+Implemented in M1 (`backend/casefile/api/exceptions.py`): the envelope itself, plus `validation_error`, `malformed_request`, `not_authenticated`, `csrf_failed`, `permission_denied`, `not_found`, `method_not_allowed`, `not_acceptable`, `unsupported_media_type`, `rate_limited` (with `details.retry_after_seconds` and a `Retry-After` header), `service_unavailable`, and `server_error`. Later milestones raise the remaining codes through `CasefileAPIError(code, message, status_code=…, details=…)`.
+
+**`GET /health/`** (Public, no session): `200 {"status": "ok", "database": "ok"}`, or `503 service_unavailable` with `details.database = "unavailable"`.
+
+Unknown routes under `/api/` return a `404 not_found` envelope. There are no trailing-slash redirects under `/api/`, so clients must use the documented paths, which all end in `/`.
 
 ## 10. Rate limits (initial)
 

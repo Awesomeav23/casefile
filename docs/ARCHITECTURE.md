@@ -203,18 +203,20 @@ Spike in milestone M10: evaluate **Vue Flow** (`@vue-flow/core`) against a custo
 
 | Status | Used for |
 |---|---|
-| 400 | Malformed request / serializer validation (`details` holds field errors); `invalid_reference` |
+| 400 | `validation_error` (`details` holds field errors), `malformed_request` (unparseable body), `invalid_reference` |
 | 401 | Not authenticated (account-only endpoints) |
 | 403 | CSRF failure (`csrf_failed`) or a staff-only endpoint called by a non-staff user (`permission_denied`) |
-| 404 | Not found **or** not owned by this player |
+| 404 | Not found **or** not owned by this player; also any unknown `/api/` route |
+| 405 / 406 / 415 | `method_not_allowed` / `not_acceptable` / `unsupported_media_type` (JSON only) |
 | 409 | State conflict: playthrough not in progress, stale `version` on board/notes/theories, accusation already submitted, results unavailable, case not available, confirmed flag can't be changed |
 | 422 | **Investigation action** not available (it references an undiscovered item): `action_unavailable` |
-| 429 | Rate limited |
+| 429 | Rate limited (`Retry-After` header + `details.retry_after_seconds`) |
 | 500 | Unexpected; generic message, details logged server-side |
+| 503 | `service_unavailable`: health check when the database is unreachable |
 
 Undiscovered references follow one rule. In an investigation **action** or **flag** they return 422 `action_unavailable`. In **player-authored payloads** (board, notes, theories, accusation citations) they return 400 `invalid_reference`.
 
-This will be implemented with a custom DRF exception handler (M1). Error `code`s are a documented, stable enum (API_PLAN §9).
+Implemented in M1 as a custom DRF exception handler (`casefile/api/exceptions.py`), plus a catch-all JSON 404 for unknown `/api/` routes and a JSON `handler500` for `/api/` paths. Error `code`s are a documented, stable enum (API_PLAN §9).
 
 **Frontend:** the API client turns errors into a typed `ApiError`. Field errors appear inline. 409s on authored content offer "Reload latest". Network failures show a non-blocking toast with retry. Failed actions leave the UI unchanged. Unknown routes and unowned playthroughs show a 404 screen. A global error boundary view catches render errors.
 

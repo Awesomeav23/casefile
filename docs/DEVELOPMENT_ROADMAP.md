@@ -1,6 +1,6 @@
 # Casefile: Development Roadmap
 
-**Status:** M0 and M0.1 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
+**Status:** M0, M0.1, and M1 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
 **Related:** every other document. Feature tags (Essential/Optional) come from [PRODUCT_SPEC](PRODUCT_SPEC.md). Decisions `D-xx` (decided and open) are listed in [PRODUCT_SPEC §9](PRODUCT_SPEC.md#9-decisions).
 
 The product vision (PRODUCT_SPEC) describes **everything Casefile should become**. This roadmap describes **the order in which to build it**. Milestones **M0–M20** make up v1.0: all Essential features (including guest play and hints), three complete cases, and deployment on Render. M21+ are post-1.0 Optional enhancements.
@@ -86,7 +86,7 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 - ✓ Branch protection on `main`: requires `secret-scan` and `lint`; force pushes and deletion blocked; admin enforcement off for solo development.
 - ✓ Secret scan (gitleaks v8.30.1): no leaks in history or working tree.
 
-## M1: Backend foundation
+## M1: Backend foundation ✓ (completed 2026-10-23)
 **Depends on:** M0 (M0.1 recommended first so CI covers this milestone)
 **Scope:** Django project `casefile` with apps `accounts`, `content`, `play`; **custom user model** (email login); settings via environment (incl. `CSRF_TRUSTED_ORIGINS`); DRF configured (session auth, JSON only, custom exception handler with the error envelope); drf-spectacular schema endpoint; `/api/v1/health/`; pytest-django against PostgreSQL (local and CI).
 **Optional spike (no paid resources without owner approval):** check Render's documented build environment against our pins (Python 3.13, Node 22, PostgreSQL 16) and pre-deploy command availability, as input to D-26.
@@ -95,7 +95,10 @@ Content writing for *The Missing Masterpiece* (narrative, evidence text, hint tr
 - `GET /api/v1/health/` returns 200 and DB status.
 - A test confirms a thrown error is rendered in the documented envelope.
 - `/api/v1/schema/` serves a valid OpenAPI document.
-- A CI backend job with a PostgreSQL service is added (it runs once the repo is public).
+- A CI backend job with a PostgreSQL service is added and green on GitHub.
+
+**Delivered:** Django 5.2.18 LTS (security support to April 2028; move to 6.2 LTS when it ships), DRF 3.18.3, drf-spectacular 0.30.0, psycopg 3.3.6, argon2 hashing; `accounts.User` (email login, case-insensitive unique email via a `Lower(email)` constraint, email-based admin forms); env-driven settings (`SECRET_KEY` required; secure cookies unless `DEBUG`); DRF JSON-only, session auth, deny-by-default permissions; error envelope handler; `/api/v1/health/`, `/api/v1/schema/`, `/api/v1/docs/` (DEBUG only); 25 pytest tests run locally and in CI. `check --deploy` hardening (HSTS, SSL redirect) is deferred to M20.
+Optional Render spike: not done (no Render resources created).
 
 ## M2: Frontend foundation & design tokens
 **Depends on:** M0

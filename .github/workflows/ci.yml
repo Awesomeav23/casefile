@@ -27,4 +27,45 @@ jobs:
       - name: Run pre-commit hooks
         run: pre-commit run --all-files --show-diff-on-failure
 
-  # Backend tests (PostgreSQL service), frontend tests, and e2e jobs are added in M1, M2, and M7+.
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: casefile
+          POSTGRES_USER: casefile
+          POSTGRES_PASSWORD: ci_only_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U casefile -d casefile"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgres://casefile:ci_only_password@localhost:5432/casefile
+      SECRET_KEY: ci-only-not-a-real-secret
+      DEBUG: "false"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: System check
+        run: python manage.py check
+      - name: Migrate from zero
+        run: python manage.py migrate --noinput
+      - name: No missing migrations
+        run: python manage.py makemigrations --check --dry-run
+      - name: OpenAPI schema is valid
+        run: python manage.py spectacular --validate --fail-on-warn --file /dev/null
+      - name: Tests
+        run: pytest
+
+  # Frontend tests and e2e jobs are added in M2 and M7+.
