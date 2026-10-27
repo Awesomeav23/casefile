@@ -38,7 +38,7 @@ from play.engine import (
 )
 from play.scoring import AnswerKey, Proof, Question, Submission, Thresholds, score
 
-from .compile import CITABLE_TYPES, build_graph, parse_ref
+from .compile import CITABLE_TYPES, build_graph, parse_ref, world_time
 from .loader import load_case
 from .report import Report
 from .schema import CaseBundle
@@ -398,17 +398,14 @@ class _Checker:
     def _time(self, value: str | None, file: str, key: str) -> datetime | None:
         if value is None:
             return None
-        world = self.b.case.setting.world_date
         try:
-            if re.fullmatch(r"\d{2}:\d{2}", value):
-                return datetime.combine(world, datetime.strptime(value, "%H:%M").time())
-            return datetime.strptime(value, "%Y-%m-%dT%H:%M")
+            return world_time(value, self.b.case.setting.world_date)
         except ValueError:
             self.r.error("timeline", file, key, f"{value!r} isn't HH:MM or YYYY-MM-DDTHH:MM")
             return None
 
     def _check_timeline(self) -> None:
-        world = datetime.combine(self.b.case.setting.world_date, datetime.min.time())
+        world = world_time("00:00", self.b.case.setting.world_date)
         claims: dict[str, tuple[datetime | None, datetime | None, str | None]] = {}
         for person, interview in self.b.interviews.items():
             for t in interview.topics:

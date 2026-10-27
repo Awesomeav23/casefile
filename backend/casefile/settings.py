@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "rest_framework",
     "drf_spectacular",
     "accounts",
@@ -90,6 +91,11 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Build-time output of `manage.py collect_case_assets`:
+# content-hashed case images (ARCHITECTURE §7).
+CASE_ASSETS_DIR = BASE_DIR / "static_src"
+STATICFILES_DIRS = [CASE_ASSETS_DIR]
+CASES_DIR = REPO_ROOT / "content" / "cases"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

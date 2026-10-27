@@ -37,3 +37,7 @@ e2e/.cache/
 .vscode/*
 !.vscode/extensions.json
 *.swp
+
+# Build output of collect_case_assets (regenerated from content/cases)
+backend/static_src/*
+!backend/static_src/.gitkeep

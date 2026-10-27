@@ -109,9 +109,9 @@ play:      (User | guest_id) 1─* Playthrough *─1 Case
 | title, summary | varchar | |
 | kind | varchar | check in (`document`,`photo`,`object`,`record`,`correspondence`,`transcript`) |
 | body | text | |
-| location_id | FK → location | nullable, `PROTECT` |
+| location_id | FK → location | nullable, `RESTRICT` (a location can't be deleted while evidence uses it, but deleting the whole case still cascades) |
 | image, image_alt | varchar | check: alt not empty when image set |
-| requires | jsonb | stored **effective** condition (implicit `visited` already combined by importer) |
+| requires | jsonb | stored **effective** condition (implicit `visited` already combined by importer). Every `requires` column stores the effective condition (people, locations, topics with their person, timeline events with their source) |
 | sort_order | integer | |
 
 `content_evidence_people`: M2M (evidence_id, person_id), unique pair.
@@ -128,7 +128,7 @@ play:      (User | guest_id) 1─* Playthrough *─1 Case
 | text | text | |
 | topic_id | FK → topic | nullable |
 | reaction_evidence_id | FK → evidence | nullable |
-| claim_from, claim_to | timestamp (no tz) | nullable; in-world wall-clock |
+| claim_from, claim_to | timestamptz | nullable; in-world wall-clock time stored as UTC (the zone has no meaning) |
 | claim_location_id | FK → location | nullable |
 | sort_order | integer | |
 | | | **check: exactly one of (topic_id, reaction_evidence_id) is not null** |
@@ -139,8 +139,8 @@ play:      (User | guest_id) 1─* Playthrough *─1 Case
 |---|---|---|
 | case_id, key | | **unique (case_id, key)** |
 | title, description | | |
-| starts_at | timestamp (no tz) | not null |
-| ends_at | timestamp (no tz) | nullable; check ≥ starts_at |
+| starts_at | timestamptz | not null; in-world wall-clock time stored as UTC |
+| ends_at | timestamptz | nullable; check ≥ starts_at |
 | location_id | FK | nullable |
 | certainty | varchar | check in (`claimed`,`verified`) |
 | source_evidence_id | FK → evidence | nullable |
@@ -157,7 +157,7 @@ play:      (User | guest_id) 1─* Playthrough *─1 Case
 `question_id` FK, `key` (**unique (question_id, key)**), `label`, `sort_order`. Only for `choice` questions (enforced by the importer).
 
 ### `content_caseimport` (audit)
-`case_id`, `imported_at`, `imported_by` (varchar: CLI user), `content_hash`, `content_version`, `breaking` bool, `report` jsonb (validator output).
+`case_id`, `imported_at`, `imported_by` (varchar: CLI user), `content_hash`, `content_version`, `breaking` bool, `report` jsonb (`warnings`, `breaking` reasons, and `published: true` for publish-only imports). One row per import that changed something; unchanged re-imports write none.
 
 ## 4. Spoiler tables 🔒
 

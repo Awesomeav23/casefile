@@ -12,6 +12,9 @@ Assumes the bundle passed the validator's condition and reference checks.
 
 from __future__ import annotations
 
+import datetime as dt
+import re
+
 from play.conditions import Condition, Discovered, Fact, ItemKey, Start, all_of, parse
 from play.engine import CaseGraph, ContradictionSpec
 
@@ -24,6 +27,24 @@ def parse_ref(ref: str, default_type: str = "evidence") -> ItemKey:
     """Citation shorthand: `alarm-log` → evidence; `statement:a/b`, `contradiction:k`, …"""
     item_type, sep, rest = ref.partition(":")
     return (item_type, rest) if sep else (default_type, ref)
+
+
+def world_time(value: str, world_date: dt.date) -> dt.datetime:
+    """'HH:MM' on the case's world date, or 'YYYY-MM-DDTHH:MM'. Stored as UTC wall-clock time.
+
+    Raises ValueError for anything else.
+    """
+    if re.fullmatch(r"\d{2}:\d{2}", value):
+        naive = dt.datetime.combine(world_date, dt.datetime.strptime(value, "%H:%M").time())
+    else:
+        naive = dt.datetime.strptime(value, "%Y-%m-%dT%H:%M")
+    return naive.replace(tzinfo=dt.UTC)
+
+
+def typed_ref(ref: str) -> dict[str, str]:
+    """Citation shorthand → the stored reference format (DATA_MODEL §6)."""
+    item_type, key = parse_ref(ref)
+    return {"type": item_type, "key": key}
 
 
 def side(ref: OneRef) -> ItemKey:

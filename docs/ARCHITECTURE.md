@@ -79,7 +79,7 @@ A custom user model is defined from the first migration (Django recommends it, a
 | `content/report.py` | `Issue` / `Report` returned by the validator |
 | `content/validator.py` | Reference, graph, solvability, hint, and fairness checks (CASE_DESIGN §6.7, §8). Pure functions over parsed content; no database needed |
 | `content/assets.py` | Deterministically hashes case assets (`sha256` of file bytes) and copies them to the static source dir at **build time** (`manage.py collect_case_assets`) |
-| `content/importer.py` | Transactionally upserts a validated case into the database by stable keys; stores hashed asset paths computed by `assets.py` (same function, so paths match); enforces the update policy (§8) |
+| `content/importer.py` | Transactionally upserts a validated case into the database by stable keys; stores hashed asset paths computed by `assets.py` (same function, so paths match); enforces the update policy (§8). Commands: `import_case`, `collect_case_assets` (M4) |
 | `play/conditions.py` | Evaluates a `requires` expression against a set of facts. Pure function |
 | `play/engine.py` | **Pure core** (built in M3): given parsed case content and a set of facts, returns the discovered set. The validator's simulation uses it directly. **Persistence wrapper** (built in M7): loads `Fact` rows, calls the core, and writes new `Discovery` rows |
 | `play/actions.py` | One handler per investigation action (`visit_location`, `examine_evidence`, `ask_topic`, `present_evidence`). Each validates the action is allowed, records a `PlaythroughEvent`, calls the engine, and returns the delta |
@@ -240,7 +240,7 @@ Implemented in M1 as a custom DRF exception handler (`casefile/api/exceptions.py
 **Case updates (default pending D-14):**
 - The importer upserts by `(case, type, key)`.
 - **Additive changes** (new items, edited text, new hint tracks, new conditions that only add paths) apply immediately, even to in-progress playthroughs. The engine re-evaluates on the next action.
-- **Breaking changes** (removed keys, changed answer key, changed accusation questions) are **refused** while any playthrough of that case is `in_progress`, unless run with `--force`. `--force` bumps `content_version` and marks affected playthroughs `stale`, and the UI offers a restart.
+- **Breaking changes** (removed keys, changed answer key, changed accusation questions) are **refused** while any playthrough of that case is `in_progress`, unless run with `--force`. *As built in M4:* drafts accept breaking changes freely, and any breaking change to a **published** case needs `--force`. M7, when playthroughs exist, narrows the refusal to published cases with playthroughs in progress. `--force` bumps `content_version` and marks affected playthroughs `stale`, and the UI offers a restart.
 - Every playthrough records the `content_version` it started on, so its results stay interpretable.
 
 **Extending mechanics.** Occasionally a case needs a genuinely new mechanic (e.g. a combination lock, audio evidence). The extension points are:

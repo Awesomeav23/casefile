@@ -1,6 +1,6 @@
 # Casefile: Development Roadmap
 
-**Status:** M0–M3 complete (2026-10-23). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
+**Status:** M0–M4 complete (M4: 2026-10-26). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
 **Related:** every other document. Feature tags (Essential/Optional) come from [PRODUCT_SPEC](PRODUCT_SPEC.md). Decisions `D-xx` (decided and open) are listed in [PRODUCT_SPEC §9](PRODUCT_SPEC.md#9-decisions).
 
 The product vision (PRODUCT_SPEC) describes **everything Casefile should become**. This roadmap describes **the order in which to build it**. Milestones **M0–M20** make up v1.0: all Essential features (including guest play and hints), three complete cases, and deployment on Render. M21+ are post-1.0 Optional enhancements.
@@ -136,7 +136,7 @@ Optional Render spike: not done (no Render resources created).
 - Assets must be real WebP files.
 - Duplicate YAML keys are an error.
 - Pure scoring was pulled forward from M14, so F6 can check for an Airtight result.
-## M4: Content models & importer
+## M4: Content models & importer ✓ (completed 2026-10-26)
 **Depends on:** M3
 **Decisions:** D-14 (open; default policy implemented).
 **Scope:** all content and spoiler models (DATA_MODEL §3–4, incl. `content_hinttrack`, `content_hint`) with constraints; `import_case` (transactional upsert by key, content hash, `--all`, `--publish`, `--force` breaking-change policy); deterministic asset hashing shared with `collect_case_assets` (build-time asset copy, ARCHITECTURE §7); `CaseImport` audit; read-only Django admin for content.
@@ -144,6 +144,14 @@ Optional Render spike: not done (no Render resources created).
 - Importer tests from TESTING_PLAN §2.6 pass, including the breaking-change refusal and importer/`collect_case_assets` path agreement.
 - DB constraint tests for content tables pass (TESTING_PLAN §3).
 - Importing `mini-case` and the Masterpiece skeleton produces browsable admin records, including hint tracks.
+
+**Delivered:** 16 content models (8 player-visible, 6 spoiler, `AccusationOption`, `CaseImport`) with database constraints; `content/assets.py` (deterministic hashed names + `collect_case_assets`); `content/importer.py` + `import_case` (`--all`, `--publish`, `--force`); breaking-change detection; read-only admin for all content; 55 new tests (196 backend total). Verified against the dev database: both cases import, re-import is a no-op, and publishing works.
+**Decided during milestone:**
+- Location foreign keys use `RESTRICT`, not `PROTECT`, so deleting a case still cascades.
+- In-world times are stored as UTC `timestamptz`.
+- Every `requires` column stores the effective condition.
+- Drafts accept breaking changes; published cases need `--force` (M7 narrows this to cases with playthroughs in progress).
+- Publishing is recorded in the import history.
 
 ## M5: Optional accounts & guest identity
 **Depends on:** M1, M2 (for UI)
@@ -165,7 +173,7 @@ Optional Render spike: not done (no Render resources created).
 ## M7: Playthroughs, discovery engine, actions & guest claiming
 **Depends on:** M4, M5
 **Decisions:** D-01, D-23 (decided); D-22 (open; default purge period).
-**Scope:** play models (Playthrough with `user_id` **or** `guest_id`, `is_preview`; Event, Fact, Discovery) and both partial unique indexes; the engine's persistence wrapper around the M3 core; `actions.py`, `visibility.py`; endpoints: start/resume/restart, list, summary, casefile, actions, seen, heartbeat, abandon, `DELETE /me/guest/`; **`accounts/claim.py`**: claim on register/login by reassigning playthrough ownership (all child data follows), with the D-23 rule and the `claimed` response payload; **`purge_guest_data`** command; per-IP throttle on guest starts; row-level locking; read-only Django admin for playthroughs; staff preview + reveal-all; **spoiler-leak test harness** (TESTING_PLAN §5) running against `mini-case` as guest and as account holder.
+**Scope:** narrow the importer's breaking-change refusal to published cases **with in-progress playthroughs** (M4 refuses for any published case); play models (Playthrough with `user_id` **or** `guest_id`, `is_preview`; Event, Fact, Discovery) and both partial unique indexes; the engine's persistence wrapper around the M3 core; `actions.py`, `visibility.py`; endpoints: start/resume/restart, list, summary, casefile, actions, seen, heartbeat, abandon, `DELETE /me/guest/`; **`accounts/claim.py`**: claim on register/login by reassigning playthrough ownership (all child data follows), with the D-23 rule and the `claimed` response payload; **`purge_guest_data`** command; per-IP throttle on guest starts; row-level locking; read-only Django admin for playthroughs; staff preview + reveal-all; **spoiler-leak test harness** (TESTING_PLAN §5) running against `mini-case` as guest and as account holder.
 **Acceptance criteria:**
 - Engine/action unit tests (TESTING_PLAN §2.2–2.3) and guest/claim tests (§2.3c) pass.
 - Partial unique index, ownership check, and concurrency tests pass.

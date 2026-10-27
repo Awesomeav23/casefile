@@ -70,6 +70,11 @@ jobs:
         run: python manage.py spectacular --validate --fail-on-warn --file /dev/null
       - name: Validate every case (and the fixture)
         run: python manage.py validate_case --all ../content/cases/_fixtures/mini-case
+      - name: Import cases (second run must be a no-op) and collect assets
+        run: |
+          python manage.py import_case --all ../content/cases/_fixtures/mini-case
+          python manage.py import_case --all ../content/cases/_fixtures/mini-case | grep -c "unchanged"
+          python manage.py collect_case_assets --include-fixtures
       - name: Tests
         run: pytest
 

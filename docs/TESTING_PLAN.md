@@ -94,6 +94,11 @@ One failing fixture per rule:
 - Import is transactional: a failure mid-import leaves no partial rows.
 - Asset paths stored by the importer equal the paths produced by `collect_case_assets` (same deterministic hash function), so a build and a release step run separately still agree.
 
+### 2.6a Implemented in M4
+- `content/tests/test_importer.py`: everything in §2.6, plus effective `requires`, typed references, publish (with its history row), and the `import_case` / `collect_case_assets` commands.
+- `content/tests/test_models.py`: content-table constraints from §3, plus `RESTRICT` on locations and cascade on case deletion.
+- `content/tests/test_admin.py`: every content admin page loads, and adding content through the admin is refused.
+
 ## 3. Database tests
 
 Run against real PostgreSQL (CI service container):

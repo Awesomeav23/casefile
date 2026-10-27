@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0–M3 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client), and the case format with its validator (`validate_case`). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0–M4 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client), the case format with its validator (`validate_case`), and the database import (`import_case`). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -138,15 +138,23 @@ npm run api:types            # regenerate src/api/schema.d.ts after backend API 
 
 Stop the database with `docker compose stop db`. `docker compose down -v` also deletes its data volume.
 
-### Planned (later milestones)
-
-> These steps describe the **intended** workflow. They don't work yet: `import_case` arrives in M4 and Playwright in M7+.
+### Cases: validate, import, publish (M3–M4)
 
 ```bash
-# Import a case into the database (backend venv from step 4)
 cd backend
-python manage.py import_case ../content/cases/the-missing-masterpiece --publish
+.venv/bin/python manage.py validate_case --all                   # fairness + solvability checks
+.venv/bin/python manage.py import_case --all                     # import every case as a draft
+.venv/bin/python manage.py import_case ../content/cases/the-missing-masterpiece --publish
+.venv/bin/python manage.py collect_case_assets                   # hashed images → backend/static_src/
+```
 
+Re-importing an unchanged case is a no-op. A breaking change (a removed key, or a changed question or answer) to a **published** case needs `--force`, and bumps its content version. Browse imported content read-only at `/admin/`.
+
+### Planned (later milestones)
+
+> These steps describe the **intended** workflow. They don't work yet: Playwright arrives in M7+.
+
+```bash
 # End-to-end tests
 npx playwright test                # from repo root, with both servers running
 ```
@@ -170,7 +178,7 @@ npx playwright test                # from repo root, with both servers running
 1. Copy `content/cases/_template/` to `content/cases/<your-slug>/`.
 2. Write the player-visible content (`case.yaml`, `people.yaml`, `locations.yaml`, `evidence.yaml`, `interviews.yaml`, `timeline.yaml`, `accusation.yaml`) and the spoiler content (`spoilers/contradictions.yaml`, `spoilers/solution.yaml`), following [`docs/CASE_DESIGN.md`](docs/CASE_DESIGN.md).
 3. Run `python manage.py validate_case <path>`. It checks references, the unlock graph, solvability, and the fairness rules.
-4. Run `python manage.py import_case <path>`, then playtest. Publish with `--publish` when ready.
+4. Run `python manage.py import_case <path>` (imports as a draft), then playtest. Publish with `--publish` when ready.
 
 The process needs no new application code unless a case requires a new *mechanic* (see "Extending mechanics" in `docs/ARCHITECTURE.md`).
 
