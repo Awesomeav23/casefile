@@ -4,6 +4,125 @@
  */
 
 export interface paths {
+  '/api/v1/auth/csrf/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Set the CSRF cookie */
+    get: operations['auth_csrf_retrieve']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/login/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Log in */
+    post: operations['auth_login_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/logout/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Log out */
+    post: operations['auth_logout_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/me/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Current user, guest, or neither */
+    get: operations['auth_me_retrieve']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/password-reset/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Request a password reset email */
+    post: operations['auth_password_reset_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/password-reset/confirm/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Set a new password with a reset token */
+    post: operations['auth_password_reset_confirm_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/register/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Create an account and log in */
+    post: operations['auth_register_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/health/': {
     parameters: {
       query?: never
@@ -24,13 +143,143 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/me/password/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Change password */
+    post: operations['me_password_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/me/profile/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Update display name and preferences */
+    patch: operations['me_profile_partial_update']
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    AuthOut: {
+      user: components['schemas']['UserOut']
+      claimed: components['schemas']['ClaimedOut']
+    }
+    ClaimConflictOut: {
+      case: string
+      /** Format: uuid */
+      kept: string
+      /** Format: uuid */
+      abandoned: string
+    }
+    ClaimedOut: {
+      playthroughs: components['schemas']['ClaimedPlaythroughOut'][]
+      conflicts: components['schemas']['ClaimConflictOut'][]
+    }
+    ClaimedPlaythroughOut: {
+      /** Format: uuid */
+      id: string
+      case: string
+      status: string
+    }
+    DetailOut: {
+      detail: string
+    }
+    GuestOut: {
+      has_progress: boolean
+      expires_after_days: number
+    }
     Health: {
       status: string
       database: string
+    }
+    Login: {
+      /** Format: email */
+      email: string
+      password: string
+    }
+    MeOut: {
+      user: components['schemas']['UserOut'] | null
+      guest: components['schemas']['GuestOut'] | null
+    }
+    PasswordChange: {
+      current_password: string
+      new_password: string
+    }
+    PasswordReset: {
+      /** Format: email */
+      email: string
+    }
+    PasswordResetConfirm: {
+      uid: string
+      token: string
+      new_password: string
+    }
+    PatchedProfile: {
+      display_name?: string
+      preferences?: components['schemas']['Preferences']
+    }
+    Preferences: {
+      text_scale?: components['schemas']['TextScaleEnum']
+      reduced_motion?: boolean
+      theme?: components['schemas']['ThemeEnum']
+      show_tips?: boolean
+    }
+    PreferencesOut: {
+      /** Format: double */
+      text_scale: number
+      reduced_motion: boolean
+      theme: string
+      show_tips: boolean
+    }
+    ProfileOut: {
+      user: components['schemas']['UserOut']
+    }
+    Register: {
+      /** Format: email */
+      email: string
+      password: string
+      display_name: string
+    }
+    /**
+     * @description * `1` - 1
+     *     * `1.15` - 1.15
+     *     * `1.3` - 1.3
+     * @enum {number}
+     */
+    TextScaleEnum: 1 | 1.15 | 1.3
+    /**
+     * @description * `dark` - dark
+     * @enum {string}
+     */
+    ThemeEnum: 'dark'
+    UserOut: {
+      id: number
+      /** Format: email */
+      email: string
+      display_name: string
+      is_staff: boolean
+      preferences: components['schemas']['PreferencesOut']
     }
   }
   responses: never
@@ -41,6 +290,152 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  auth_csrf_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  auth_login_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Login']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthOut']
+        }
+      }
+    }
+  }
+  auth_logout_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  auth_me_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MeOut']
+        }
+      }
+    }
+  }
+  auth_password_reset_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordReset']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DetailOut']
+        }
+      }
+    }
+  }
+  auth_password_reset_confirm_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordResetConfirm']
+      }
+    }
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  auth_register_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Register']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthOut']
+        }
+      }
+    }
+  }
   health_retrieve: {
     parameters: {
       query?: never
@@ -56,6 +451,51 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['Health']
+        }
+      }
+    }
+  }
+  me_password_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordChange']
+      }
+    }
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  me_profile_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['PatchedProfile']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileOut']
         }
       }
     }

@@ -15,6 +15,8 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, []),
+    GUEST_RETENTION_DAYS=(int, 90),
+    PUBLIC_ORIGIN=(str, ""),
 )
 # Local development reads the repo-root .env; in CI and on Render, real env vars win.
 environ.Env.read_env(REPO_ROOT / ".env", overwrite=False)
@@ -23,6 +25,10 @@ SECRET_KEY = env("SECRET_KEY")  # required: no default, so a missing key fails l
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
+# Origin used in emailed links, e.g. https://casefile.example. Empty: use the request's host.
+PUBLIC_ORIGIN = env("PUBLIC_ORIGIN")
+# D-22 (open): guest sessions and inactive guest data last this many days.
+GUEST_RETENTION_DAYS = env("GUEST_RETENTION_DAYS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -105,17 +111,24 @@ CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = False  # the SPA reads it to send X-CSRFToken
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # accounts: 2 weeks; guests get GUEST_RETENTION_DAYS
+
+# Email: printed to the console until a provider is chosen (D-17, M20).
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Casefile <no-reply@casefile.local>")
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "casefile.api.authentication.CsrfSessionAuthentication",
     ],
     # Deny by default; each view opts in to its access level (Public, Player, Account, Staff).
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "casefile.api.exceptions.exception_handler",
+    "DEFAULT_THROTTLE_RATES": {"auth_ip": "10/min", "auth_account": "5/min"},
 }
 
 SPECTACULAR_SETTINGS = {

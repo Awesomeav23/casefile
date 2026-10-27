@@ -131,4 +131,51 @@ jobs:
       - name: Types are up to date
         run: git diff --exit-code -- frontend/src/api/schema.d.ts
 
-  # E2E (Playwright) jobs are added from M7 onward.
+  e2e:
+    # Real browser (Chromium) against Django + Vite started by Playwright (e2e/playwright.config.ts).
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: casefile
+          POSTGRES_USER: casefile
+          POSTGRES_PASSWORD: ci_only_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U casefile -d casefile"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      E2E_DATABASE_URL: postgres://casefile:ci_only_password@localhost:5432/casefile_e2e
+      SECRET_KEY: ci-only-not-a-real-secret
+      PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - name: Install
+        run: |
+          pip install -r backend/requirements.txt
+          npm ci --prefix frontend
+          npm ci --prefix e2e
+          npx --prefix e2e playwright install --with-deps chromium
+      - name: Run E2E tests
+        working-directory: e2e
+        run: npx playwright test
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7

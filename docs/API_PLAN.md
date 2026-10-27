@@ -80,7 +80,16 @@ Errors: 400 `validation_error` (duplicate email, weak password).
   "conflicts": [ { "case": "the-missing-masterpiece", "kept": "6c1e…", "abandoned": "91aa…" } ]   // D-23 rule
 }
 ```
-`claimed` is `{ "playthroughs": [], "conflicts": [] }` when there was no guest progress.
+`claimed` is `{ "playthroughs": [], "conflicts": [] }` when there was no guest progress. *Until M7 adds playthroughs, it's always empty.*
+
+**As built in M5:**
+- `GET /auth/csrf/` → 204, and sets `csrftoken`.
+- `POST /auth/logout/` → 204.
+- `POST /auth/password-reset/` → 202 `{ "detail": "If an account exists for that email, we've sent a link…" }`, the same for unknown emails. The emailed link is `<origin>/reset-password?uid=…&token=…`.
+- `POST /auth/password-reset/confirm/` `{ uid, token, new_password }` → 204. An invalid or reused token → 400 with `details.token`.
+- `POST /me/password/` `{ current_password, new_password }` → 204, and you stay logged in.
+- `PATCH /me/profile/` `{ display_name?, preferences? }` → 200 `{ user }`. Preferences merge, and unknown keys are rejected. Allowed values: `text_scale` ∈ {1, 1.15, 1.3}, `reduced_motion` boolean, `theme` ∈ {`dark`} (light theme: D-08), `show_tips` boolean.
+- Login, register and reset are rate-limited per IP and per email address; reset-confirm per IP.
 
 **GET `/auth/me/`**
 ```json

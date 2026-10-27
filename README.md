@@ -2,7 +2,7 @@
 
 > An immersive mystery investigation platform. Read the briefing, walk the scene, question suspects, catch the lie, and name the culprit, with proof.
 
-**Status: M0–M4 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client), the case format with its validator (`validate_case`), and the database import (`import_case`). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
+**Status: M0–M5 complete.** This repository contains the design documentation, development tooling (local PostgreSQL, lint hooks, CI), licensing, the Django backend foundation (custom user model, error envelope, health and schema endpoints), the Vue frontend foundation (design tokens, accessible UI primitives, placeholder routes for every screen, typed API client), the case format with its validator (`validate_case`), the database import (`import_case`), and optional accounts with guest identity (register, log in, password reset; Playwright E2E). No application code exists yet. Every feature described below is *planned*, not implemented. See [the roadmap](docs/DEVELOPMENT_ROADMAP.md) for what comes next.
 
 ---
 
@@ -48,7 +48,7 @@ Essential (v1.0) and optional features are listed in full in [`docs/PRODUCT_SPEC
 | Database | PostgreSQL |
 | API schema | OpenAPI generated with drf-spectacular; TypeScript types generated from it |
 | Testing | pytest + pytest-django (backend), Vitest + Vue Test Utils (frontend), Playwright (end-to-end) |
-| CI | GitHub Actions: secret scan (gitleaks), lint, backend checks/tests against PostgreSQL 16, frontend lint/type-check/tests/build, API-type drift check |
+| CI | GitHub Actions: secret scan (gitleaks), lint, backend checks/tests against PostgreSQL 16, frontend lint/type-check/tests/build, API-type drift check, Playwright E2E (Chromium) |
 | Hosting (planned) | Render: Web Service (Django + built Vue SPA) and Render PostgreSQL. Pricing and requirements to be verified before deployment |
 
 Rationale is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -134,7 +134,7 @@ npm run lint:check && npm run format:check && npm run type-check && npm test && 
 npm run api:types            # regenerate src/api/schema.d.ts after backend API changes
 ```
 
-**Ports:** Casefile uses fixed dev ports (**Django 8010, Vite 5180, PostgreSQL 5436**), because the usual defaults (8000, 5173, 5432) are taken by other local projects. Vite uses `strictPort`, so a clash fails loudly instead of silently serving a different app.
+**Ports:** Casefile uses fixed dev ports (**Django 8010, Vite 5180, PostgreSQL 5436**; E2E uses 8020 and 5190), because the usual defaults (8000, 5173, 5432) are taken by other local projects. Vite uses `strictPort`, so a clash fails loudly instead of silently serving a different app.
 
 Stop the database with `docker compose stop db`. `docker compose down -v` also deletes its data volume.
 
@@ -150,14 +150,20 @@ cd backend
 
 Re-importing an unchanged case is a no-op. A breaking change (a removed key, or a changed question or answer) to a **published** case needs `--force`, and bumps its content version. Browse imported content read-only at `/admin/`.
 
-### Planned (later milestones)
-
-> These steps describe the **intended** workflow. They don't work yet: Playwright arrives in M7+.
+### End-to-end tests (Playwright, from M5)
 
 ```bash
-# End-to-end tests
-npx playwright test                # from repo root, with both servers running
+cd e2e
+npm install                        # with Node 23 locally: npx --yes npm@11 install
+npx playwright install chromium    # once
+npx playwright test                # starts Django on 8020 + Vite on 5190 itself, using database casefile_e2e
 ```
+
+The E2E run never touches your dev database or dev servers: it creates `casefile_e2e` on the local PostgreSQL if it's missing.
+
+### Accounts are optional
+
+Guests can play without signing up (D-01). Password-reset emails print to the Django console until an email provider is chosen (D-17).
 
 ## Documentation
 

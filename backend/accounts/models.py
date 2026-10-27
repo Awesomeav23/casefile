@@ -11,9 +11,13 @@ class UserManager(BaseUserManager):
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("An email address is required.")
+        display_name = extra_fields.pop("display_name", None)
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+        PlayerProfile.objects.create(
+            user=user, display_name=display_name or default_display_name(email)
+        )
         return user
 
     def create_user(self, email, password=None, **extra_fields):
@@ -56,3 +60,32 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+def default_preferences() -> dict:
+    return {"text_scale": 1, "reduced_motion": False, "theme": "dark", "show_tips": True}
+
+
+def default_display_name(email: str) -> str:
+    return email.split("@")[0][:40] or "Detective"
+
+
+class PlayerProfile(models.Model):
+    """Display name and preferences for an account holder (guests keep these in the browser)."""
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, primary_key=True, related_name="profile"
+    )
+    display_name = models.CharField(max_length=40)
+    preferences = models.JSONField(default=default_preferences)
+
+    def __str__(self):
+        return self.display_name
+
+
+def profile_for(user: User) -> PlayerProfile:
+    """The user's profile, created on first use for accounts made without one."""
+    profile, _ = PlayerProfile.objects.get_or_create(
+        user=user, defaults={"display_name": default_display_name(user.email)}
+    )
+    return profile

@@ -181,7 +181,7 @@ Spike in milestone M10: evaluate **Vue Flow** (`@vue-flow/core`) against a custo
 | Visitor | No session yet (read-only browsing) | — |
 
 - A guest ID is created **lazily** when a visitor first starts a playthrough. Browsing the library or briefings creates nothing.
-- The guest session cookie lasts for the D-22 retention period (default 90 days), renewed on activity. The account session uses Django's default age unless "remember me" is added later.
+- The guest session cookie lasts for the D-22 retention period (`GUEST_RETENTION_DAYS`, default 90), renewed every time `ensure_guest` runs on a write. The account session uses Django's default age unless "remember me" is added later.
 - **Claim on login/register:** `claim.py` runs immediately after `login()`. Django preserves the anonymous session's data when a user logs in, so `guest_id` is still available. All of that guest's playthroughs, events, flags, hints, notes, board, theories, and accusations move to the user in one transaction. D-23 resolves conflicts with an existing in-progress playthrough of the same case. The response lists what was claimed.
 - **Logout** ends the session. A guest who later starts again on the same browser gets a new guest ID, because claimed progress now belongs to the account.
 - **Guest abuse limits:** per-IP throttle on starting playthroughs (API_PLAN §10). Guest rows are purged by `purge_guest_data` after D-22's inactivity period.
@@ -189,6 +189,9 @@ Spike in milestone M10: evaluate **Vue Flow** (`@vue-flow/core`) against a custo
 **Authentication details**
 - Email + password via Django auth; Argon2 password hashing; login rate-limited (DRF throttling, per-IP and per-account).
 - `GET /api/v1/auth/csrf/` sets the CSRF cookie; the client sends `X-CSRFToken` on unsafe methods (guests included).
+- **CSRF on every unsafe request** (M5): DRF's `SessionAuthentication` only checks CSRF for logged-in users, and DRF views are exempt from Django's CSRF middleware. `casefile.api.authentication.CsrfSessionAuthentication` (the default authentication class) enforces it for visitors and guests too, which covers the login and register forms and guest writes.
+- Auth rate limits (`accounts/throttles.py`) count in Django's cache, which is process-local in v1.0. M20 decides whether multiple workers need a shared cache.
+- Password-reset links use `PUBLIC_ORIGIN` (env) or the request's host. Tokens are Django's single-use password-reset tokens.
 - Session cookie: `HttpOnly`, `Secure` (prod), `SameSite=Lax`.
 
 **Permissions**

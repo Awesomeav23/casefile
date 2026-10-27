@@ -1,6 +1,6 @@
 # Casefile: Development Roadmap
 
-**Status:** M0–M4 complete (M4: 2026-10-26). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
+**Status:** M0–M5 complete (M4–M5: 2026-10-26/27). All later milestones are planned and not started. Implementation resumes only when the owner explicitly asks.
 **Related:** every other document. Feature tags (Essential/Optional) come from [PRODUCT_SPEC](PRODUCT_SPEC.md). Decisions `D-xx` (decided and open) are listed in [PRODUCT_SPEC §9](PRODUCT_SPEC.md#9-decisions).
 
 The product vision (PRODUCT_SPEC) describes **everything Casefile should become**. This roadmap describes **the order in which to build it**. Milestones **M0–M20** make up v1.0: all Essential features (including guest play and hints), three complete cases, and deployment on Render. M21+ are post-1.0 Optional enhancements.
@@ -153,7 +153,7 @@ Optional Render spike: not done (no Render resources created).
 - Drafts accept breaking changes; published cases need `--force` (M7 narrows this to cases with playthroughs in progress).
 - Publishing is recorded in the import history.
 
-## M5: Optional accounts & guest identity
+## M5: Optional accounts & guest identity ✓ (completed 2026-10-27)
 **Depends on:** M1, M2 (for UI)
 **Decisions:** **D-01** (decided: guest play, optional accounts); D-17 (open; console email backend until M20); D-22 (open; default 90-day guest cookie).
 **Scope:** `accounts/identity.py` (`get_player`: account or lazily created guest ID in the anonymous session); register/login/logout/me/CSRF endpoints (`/auth/me/` reports user, guest, or neither); password reset and change (console email in dev); profile & preferences (guest preferences in `localStorage`); rate limiting; login/register/reset screens with the "keep your progress across devices" benefit copy; auth store (visitor / guest / account).
@@ -162,6 +162,17 @@ Optional Render spike: not done (no Render resources created).
 - API permission matrix tests (visitor / guest / account / staff) pass; CSRF enforced for guests and accounts alike.
 - E2E `auth.spec` passes.
 - Session cookie flags set per environment; guest session lifetime matches D-22's default.
+
+**Delivered:**
+- **Backend:** `PlayerProfile`; `accounts/identity.py` (`get_player`, `ensure_guest`); `IsPlayer`; `CsrfSessionAuthentication`; endpoints csrf, me, register, login, logout, password-reset (+confirm), `/me/profile/`, `/me/password/`; per-IP and per-email throttles. 53 new tests, including the visitor/guest/account/staff permission matrix and CSRF for anonymous writes.
+- **Frontend:** `UiTextField`; auth store; `AppHeader` showing the signed-in name and log-out; login, register and reset screens (validation on blur, server errors mapped to fields, safe `next` redirects).
+- **Browser tests:** Playwright E2E (`e2e/`, Chromium) with `auth.spec`, plus a CI `e2e` job.
+- **Totals:** 249 backend, 126 frontend, and 3 E2E tests.
+
+**Changes made during M5:**
+- **CSRF for everyone.** DRF skips CSRF for anonymous users, so a custom authentication class now enforces it on every unsafe request.
+- **Playwright pulled forward from M7.** The M5 acceptance criteria require it. It runs on its own ports (8020/5190) and database (`casefile_e2e`).
+- **Claiming waits for M7.** Guest-progress claiming (`claimed`) is always empty until playthroughs exist.
 
 ## M6: Case library & briefing API
 **Depends on:** M4, M5

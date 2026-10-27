@@ -195,9 +195,16 @@ Parametrised over every folder in `content/cases/` except those whose names star
 ### 7.3 Type checking & lint
 `vue-tsc --build`, oxlint + ESLint, and Prettier in CI (and as pre-commit hooks). Generated API types must compile against the current schema.
 
+## 7.4 Implemented in M5
+- **Backend:**
+  - `accounts/tests/test_identity.py`: browsing creates no guest; the first write creates one with a 90-day session; accounts win over a leftover guest ID; guest writes need CSRF.
+  - `test_auth_api.py`: every auth endpoint, the permission matrix, throttles, CSRF with and without a token, and the reset-token lifecycle.
+- **Frontend:** `UiTextField`, the auth store, `AppHeader`, and the login, register and reset views (axe included).
+- **E2E:** `e2e/tests/auth.spec.ts`.
+
 ## 8. End-to-end tests (Playwright)
 
-Seeded with the fixture case and every case under `content/cases/` (all three by M18) via `import_case` before the run. Database reset between specs.
+Run from `e2e/` (`npx playwright test`). Playwright starts Django (8020) and Vite (5190) against a separate `casefile_e2e` database. Specs use unique emails, so no reset is needed between runs. From M7, specs that need cases will seed the fixture case and every case under `content/cases/` via `import_case`.
 
 | Spec | Journey |
 |---|---|
